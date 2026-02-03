@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 20px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .control-group select,
+        .control-group button {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .control-group select:hover,
+        .control-group button:hover {
+            border-color: #667eea;
+        }
+
+        .control-group select:focus,
+        .control-group button:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .view-btn {
+            background: white;
+            min-width: 40px;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Grid View */
+        .grid-container {
+            display: none;
+            padding: 20px;
+        }
+
+        .grid-container.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .coin-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .coin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .coin-card-images {
+            display: flex;
+            gap: 4px;
+            background: white;
+        }
+
+        .coin-card-images img {
+            width: 50%;
+            height: auto;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+
+        .coin-card-info {
+            padding: 15px;
+        }
+
+        .coin-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .coin-card-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 10px;
+            font-size: 0.85rem;
+        }
+
+        .coin-card-details dt {
+            color: #6b7280;
+        }
+
+        .coin-card-details dd {
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .coin-card-value {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #059669;
+        }
+
+        /* View visibility */
+        .table-container.hidden,
+        .grid-container.hidden {
+            display: none !important;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f3f4f6;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background-color: #e5e7eb;
+        }
+
+        .coin-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .coin-image:hover {
+            transform: scale(1.8);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border-color: #667eea;
+        }
+
+        .image-cell {
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .empty-cell {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .value-cell {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .note-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .footer {
+            background: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 8px 5px;
+            }
+
+            .coin-image {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Coin Collection</h1>
+            <p>Total: 79 coins</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>View:</label>
+                <button class="view-btn active" id="listViewBtn" onclick="setView('list')" title="List View">☰</button>
+                <button class="view-btn" id="gridViewBtn" onclick="setView('grid')" title="Grid View">▦</button>
+            </div>
+            <div class="control-group">
+                <label for="sortSelect">Sort by:</label>
+                <select id="sortSelect" onchange="sortCoins()">
+                    <option value="">-- Select --</option>
+                    <option value="country">Country</option>
+                    <option value="issuer">Issuer</option>
+                    <option value="year">Year</option>
+                    <option value="grade">Grade</option>
+                    <option value="composition">Composition</option>
+                    <option value="value">Value</option>
+                </select>
+                <button onclick="toggleSortOrder()" id="sortOrderBtn" title="Toggle sort order">↑</button>
+            </div>
+        </div>
+
+        <div class="table-container" id="tableContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Issuer</th>
+                        <th>Denomination</th>
+                        <th>Subject</th>
+                        <th>Krause Number</th>
+                        <th>Year</th>
+                        <th>Mintmark</th>
+                        <th>Grade</th>
+                        <th>Value, USD (CoinSnap)</th>
+                        <th>Composition</th>
+                        <th>Obverse photo</th>
+                        <th>Reverse photo</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr data-country="Türkiye" data-issuer="Turkey" data-year="1991" data-grade="XF" data-composition="Nickel-Brass" data-value="0.47">
+                        <td>Türkiye</td>
+                        <td>Turkey</td>
+                        <td>2500 lira</td>
+                        <td>Common series</td>
+                        <td>KM# 1015</td>
+                        <td>1991</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.47</td>
+                        <td>Nickel-Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/306a2d32-1419-45ad-9d44-3a0fdc635ce7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9c674031-b763-4cd4-bb5a-8f3fa4b9eb66.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Türkiye" data-issuer="Turkey" data-year="1996" data-grade="AU" data-composition="Copper-Zinc-Nickel" data-value="0.67">
+                        <td>Türkiye</td>
+                        <td>Turkey</td>
+                        <td>25000 lira</td>
+                        <td>Common series</td>
+                        <td>KM# 1041</td>
+                        <td>1996</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.67</td>
+                        <td>Copper-Zinc-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/9a525deb-f19b-4cce-828a-a9a4109aaf61.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e986ca1c-4862-44a2-82e6-976c21fa10f9.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Türkiye" data-issuer="Turkey" data-year="1998" data-grade="AU" data-composition="Copper-Zinc-Nickel" data-value="0.36">
+                        <td>Türkiye</td>
+                        <td>Turkey</td>
+                        <td>25000 lira</td>
+                        <td>Common series</td>
+                        <td>KM# 1041</td>
+                        <td>1998</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.36</td>
+                        <td>Copper-Zinc-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/fe207419-ec9f-4e62-8939-52df8b216867.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b198bb3f-ad7d-4e2a-8297-89b9c27fc80b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="AU" data-composition="Aluminium" data-value="0.35">
+                        <td>Tunisia</td>
+                        <td>Tunisia</td>
+                        <td>5 millimes</td>
+                        <td>Common series</td>
+                        <td>KM# 282</td>
+                        <td>1996</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.35</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/8f7624a2-d283-49ca-9aac-c787de0b08a3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/a47fac0a-fd5e-4a2a-9639-7642ade42084.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Tunisia" data-issuer="Tunisia" data-year="1993" data-grade="XF" data-composition="Brass" data-value="0.24">
+                        <td>Tunisia</td>
+                        <td>Tunisia</td>
+                        <td>20 millimes</td>
+                        <td>Common series</td>
+                        <td>KM# 307</td>
+                        <td>1993</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.24</td>
+                        <td>Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/41517637-4bf0-4d1c-bb1e-146a973ea1a8.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/ad0aa9f0-9b7e-4c5d-a719-d576aa3e8895.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="XF" data-composition="Brass" data-value="0.34">
+                        <td>Tunisia</td>
+                        <td>Tunisia</td>
+                        <td>50 millimes</td>
+                        <td>Common series</td>
+                        <td>KM# 308</td>
+                        <td>1996</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.34</td>
+                        <td>Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/12fd3b81-013a-43a6-832a-040f82debf0b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fced2252-4ea8-4638-b38b-e311c5b7c139.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="XF" data-composition="Brass" data-value="0.18">
+                        <td>Tunisia</td>
+                        <td>Tunisia</td>
+                        <td>100 millimes</td>
+                        <td>Common series</td>
+                        <td>KM# 309</td>
+                        <td>1996</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.18</td>
+                        <td>Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d3a724d3-c9bd-4ba2-8903-0ce491280199.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/72c3ece3-9961-4eb8-898c-dba6dc0bf840.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Israel" data-issuer="Israel" data-year="1991" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.23">
+                        <td>Israel</td>
+                        <td>Israel</td>
+                        <td>10 agorot</td>
+                        <td>Common series</td>
+                        <td>KM# 158</td>
+                        <td>1991</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.23</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dcfd492d-aa5e-4943-bc57-79ee93d4f59e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e45275ee-7c1e-41f6-be1d-df0d3d009b56.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Türkiye" data-issuer="Turkey" data-year="1998" data-grade="VF" data-composition="Copper-Zinc-Nickel" data-value="0.28">
+                        <td>Türkiye</td>
+                        <td>Turkey</td>
+                        <td>50000 lira</td>
+                        <td>Common series</td>
+                        <td>KM# 1056</td>
+                        <td>1998</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.28</td>
+                        <td>Copper-Zinc-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2059bfee-c9d9-4c73-82e1-6dc94801a0f5.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/124a31dc-5bbc-44ec-b65e-ad57fb2ed350.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1970" data-grade="XF" data-composition="Copper-Nickel" data-value="0.28">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 55</td>
+                        <td>1970</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.28</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f3f7f210-422b-4439-a079-fdf56d9bc825.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b5cbaa00-39e2-4391-bcd8-fa9326f58530.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1960" data-grade="AU" data-composition="Copper-Nickel" data-value="0.32">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 46.2</td>
+                        <td>1960</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.32</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4c4e0d1d-eada-4965-99dd-a4be999379d3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/93d858af-cbc5-42f5-bcf7-31152ffdada5.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1946" data-grade="XF" data-composition="Copper-Nickel" data-value="0.58">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 46.1</td>
+                        <td>1946</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.58</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d9be89f8-793e-46d4-8f4f-b448b3027a3a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/d8a5f860-2774-4bd0-9820-3b0af8a01e7b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1952" data-grade="XF" data-composition="Copper-Nickel" data-value="0.23">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 46.2</td>
+                        <td>1952</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.23</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d20154e3-7314-4e00-9e2b-38ed54c6ca49.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/803d05d2-52b5-4b76-8ae8-d1a2e21118a2.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1964" data-grade="XF" data-composition="Copper-Nickel" data-value="0.48">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 46.2</td>
+                        <td>1964</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.48</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/12407afc-518f-46d3-8ff7-7754730b3e1b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7125c430-4b34-4730-8623-b89aa6067d6f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1978" data-grade="AU" data-composition="Copper-Nickel" data-value="0.29">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 55</td>
+                        <td>1978</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.29</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2351d387-a49e-4942-b2b9-9003d3e41929.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7808345c-6c57-447a-8f50-4e67b0cbc236.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1976" data-grade="AU" data-composition="Copper-Nickel" data-value="0.21">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 55</td>
+                        <td>1976</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.21</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/35aab4ff-c3f0-4bd7-b794-ff4b48ea9f18.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/83efd949-aac1-4ce5-b5b3-35a970644a07.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Luxembourg" data-issuer="Luxembourg" data-year="1935" data-grade="AU" data-composition="Nickel" data-value="3.67">
+                        <td>Luxembourg</td>
+                        <td>Luxembourg</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 35</td>
+                        <td>1935</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 3.67</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/950d8115-e839-4fa0-91f1-6b1e33193fec.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/2d1a97cb-e4da-4599-9a33-a7110eb862f1.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Singapore" data-issuer="Singapore" data-year="1996" data-grade="AU" data-composition="Copper plated zinc" data-value="0.65">
+                        <td>Singapore</td>
+                        <td>Singapore</td>
+                        <td>1 cent</td>
+                        <td>Common series</td>
+                        <td>KM# 98</td>
+                        <td>1996</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.65</td>
+                        <td>Copper plated zinc</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/44fd9170-8194-4d4c-bd86-ba7a94583739.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c1e0a8a0-49c9-455b-b3ea-03dfad7ebbca.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1990" data-grade="AU" data-composition="Bronze" data-value="0.17">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>10 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1990</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.17</td>
+                        <td>Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/489f9289-c35d-4da5-8aeb-872ed67978f7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3a785dc3-c5bf-47bd-828d-89ab9465e136.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1993" data-grade="AU" data-composition="Aluminium" data-value="0.16">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>1 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1993</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.16</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dbac102d-e925-4d7d-85c3-4115e122312c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9d7651aa-9d4e-40f5-9e84-3107be4f9284.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1982" data-grade="AU" data-composition="Aluminium" data-value="0.18">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>1 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1982</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.18</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/8630e351-df1f-4a28-97bf-91c1af1870c0.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/284ccb13-d329-4ece-8ba2-90671b5c4b6c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1980" data-grade="AU" data-composition="Aluminium" data-value="0.08">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>1 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1980</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.08</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/cdc8c893-927e-4505-bdd2-6c7b1a71d112.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b08290e2-0035-486c-a294-22ea7d69d86e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1975" data-grade="XF" data-composition="Copper-Nickel" data-value="0.94">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>100 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1975</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.94</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/45a053ae-a3f0-4263-89c5-edd754be3eb6.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3be6dadc-ece0-49d4-8569-c87118c9ccae.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Japan" data-issuer="Japan" data-year="1968" data-grade="AU" data-composition="Bronze" data-value="0.2">
+                        <td>Japan</td>
+                        <td>Japan</td>
+                        <td>10 yen</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1968</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.2</td>
+                        <td>Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/092c6251-29f9-4e70-8ae5-dab35e0734ce.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3ade1382-6756-454c-beb0-f11ab874daff.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Saudi Arabia" data-issuer="Saudi Arabia" data-year="1987" data-grade="AU" data-composition="Copper-Nickel" data-value="0.33">
+                        <td>Saudi Arabia</td>
+                        <td>Saudi Arabia</td>
+                        <td>10 halalas</td>
+                        <td>Common series</td>
+                        <td>KM# 62</td>
+                        <td>1987</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.33</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4b93ce51-6f5b-47bb-9079-655be7c50ba2.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/333dab68-61fb-48ed-81ff-8cd13f1dcbcc.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Saudi Arabia" data-issuer="Saudi Arabia" data-year="1972" data-grade="VF" data-composition="Copper-Nickel" data-value="0.44">
+                        <td>Saudi Arabia</td>
+                        <td>Saudi Arabia</td>
+                        <td>10 halalas</td>
+                        <td>Common series</td>
+                        <td>KM# 46</td>
+                        <td>1972</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.44</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/5402b3ac-e9c3-41f4-9a26-3f3ee2b30180.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/eb0ee222-d22d-4c68-912f-941de9aa0701.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="AU" data-composition="Copper-Nickel" data-value="0.96">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>50 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 13</td>
+                        <td>2007</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.96</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a7ca2967-d708-45f9-8a79-25fea66c9888.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/a726d3f7-6b3f-46e2-b84b-6bcb3ad391ff.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="1992" data-grade="AU" data-composition="Nickel-Brass" data-value="0.46">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>20 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 22.1</td>
+                        <td>1992</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.46</td>
+                        <td>Nickel-Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/530e7935-ea1b-4631-8a61-5e66e24bb02f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c5dfa93c-5130-47f0-b708-d1a72da61f09.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="1992" data-grade="XF" data-composition="Copper-Nickel" data-value="0.68">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>50 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 13</td>
+                        <td>1992</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.68</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7b3965eb-6195-42b1-a801-9bda43538001.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c67c0df4-4a31-47fb-aebd-d1315a34f974.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Copper-Nickel" data-value="1.17">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>50 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 13</td>
+                        <td>2009</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 1.17</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/3269601f-5bdf-4151-a990-c0e7d80c492f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/29f66fc4-7915-4813-af6d-2a3e432da4b3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Nickel-Brass" data-value="0.33">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>20 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 22.1</td>
+                        <td>2009</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.33</td>
+                        <td>Nickel-Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dd7f9873-3f09-4b98-8664-40613fd6d2d3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/4cfe643e-20f4-4595-bb98-a9a4bdb99de1.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="XF" data-composition="Copper-Nickel" data-value="1.51">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Common series</td>
+                        <td>KM# 12</td>
+                        <td>2008</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 1.51</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a81ae63e-3a68-4a4e-9efe-6c5fe91b0afa.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/74666796-f5e2-442c-aae4-f66aae56e815.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="XF" data-composition="Copper-Nickel" data-value="1.42">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Common series</td>
+                        <td>KM# 12</td>
+                        <td>2007</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 1.42</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7e1b11c7-dd6b-4711-8295-b1ca4fa9d371.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/da8756d1-808c-44d2-92cb-675adab3bc3a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Nickel-Brass" data-value="0.33">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>20 santimu</td>
+                        <td>Common series</td>
+                        <td>KM# 22.1</td>
+                        <td>2009</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.33</td>
+                        <td>Nickel-Brass</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2f304921-691e-4b14-a17c-5a1c9af2fd9e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/dbe9b5a4-ebac-4c88-b71e-39621d97aea6.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="AU" data-composition="Copper-Nickel" data-value="3.46">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Owl Fibula</td>
+                        <td>KM# 86</td>
+                        <td>2007</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 3.46</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/500506d0-1171-4750-bcdc-2953da5f99ed.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/12fcb835-d8ed-4911-8dde-04b028e3ac0d.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="AU" data-composition="Copper-Nickel" data-value="1.51">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Common series</td>
+                        <td>KM# 12</td>
+                        <td>2008</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 1.51</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/3cd80905-a7d4-4d15-bec3-c2f72835a481.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/763593cc-3787-4ad4-a1e0-8ef6144f327c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="XF" data-composition="Copper-Nickel" data-value="1.42">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Common series</td>
+                        <td>KM# 12</td>
+                        <td>2007</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 1.42</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/aeb2de6c-20c0-42a5-b054-ee41a1728223.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7dced2b2-7e2f-4c9f-a7a8-1e7c8b11dc3a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="AU" data-composition="Copper-Nickel" data-value="1.51">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>1 lats</td>
+                        <td>Common series</td>
+                        <td>KM# 12</td>
+                        <td>2008</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 1.51</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/e60ce13a-40d5-4bf3-92f4-c5575552c650.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1ddf4839-0980-4438-96b8-24f9b098f8b9.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Latvia" data-issuer="Latvia" data-year="1999" data-grade="XF" data-composition="Bi-Metallic: Brass center, Copper-Nickel ring" data-value="4.55">
+                        <td>Latvia</td>
+                        <td>Latvia</td>
+                        <td>2 lati</td>
+                        <td>Common series</td>
+                        <td>KM# 38</td>
+                        <td>1999</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 4.55</td>
+                        <td>Bi-Metallic: Brass center, Copper-Nickel ring</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7a2c297e-4145-4e72-9574-bb6faeffe8a9.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7f4b044f-5144-4634-8bc9-47e9de9fd289.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1939" data-grade="VG" data-composition="Aluminium-Bronze" data-value="0.32">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1939</td>
+                        <td>No mintmark</td>
+                        <td>VG</td>
+                        <td class="value-cell">$ 0.32</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ca18310f-840a-43d9-b65e-8df595120db7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9164d11e-bd06-49d0-b9d5-5582478f326c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1992" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.62">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>5 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 933</td>
+                        <td>1992</td>
+                        <td>Alignment ↑↓</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.62</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4867ad94-9db7-4b8b-a8f7-fc74f22c83fb.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1ee17dc1-3a45-4821-adf3-7d40564df3eb.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1939" data-grade="G" data-composition="Aluminium-Bronze" data-value="0.32">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1939</td>
+                        <td>No mintmark</td>
+                        <td>G</td>
+                        <td class="value-cell">$ 0.32</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/5d825fb2-16d5-41e6-a0e8-48452c2df062.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f1d80739-65da-4bea-a4e4-733ba20fdd01.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.15">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>5 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 933</td>
+                        <td>1977</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.15</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/1ba6f634-4dc3-436e-94d4-60d6ebfd23f2.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e21126b8-40a5-4978-b7ae-166c2d69545b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1941" data-grade="XF" data-composition="Aluminium" data-value="0.42">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1941</td>
+                        <td>Aluminium</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.42</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/51504fb5-8c4f-4a36-9bc2-23c68ead77d8.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6a85612a-e0d3-4bd1-acee-8f3de9c12381.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1970" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1970</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.16</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d2725eba-e9ca-4e4e-9cfb-10581f574cdd.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/999ba75e-3529-4f7e-93a3-a14ac46837a9.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1985" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.27">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1985</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.27</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/34a57c3e-4549-4527-b5e3-7db97c69b247.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/bff21685-833b-40cd-ba61-7c106cf303b4.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1987" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.13">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1987</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.13</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/760c52b9-c345-49e4-8698-2e176a6201b3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/67494c72-dadc-419d-b542-cef564ae5039.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1992" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.09">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1992</td>
+                        <td>Alignment ↑↓</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.09</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/813188c1-175c-4896-ab80-7fa14851b138.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e8e24694-a771-487b-b475-8aaebbf0b9ed.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1932" data-grade="G" data-composition="Aluminium-Bronze" data-value="0.21">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1932</td>
+                        <td>No mintmark</td>
+                        <td>G</td>
+                        <td class="value-cell">$ 0.21</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/e8862d3d-7a65-401e-8a45-fb8e7f046401.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/be7642c6-7aec-447d-b8c0-315543998a12.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1979" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.08">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1979</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.08</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ab3b300a-c7f9-4ac7-aa6b-df639d8b4d3a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0639feaf-7749-4763-b753-878e7ba0ca85.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="2000" data-grade="AU" data-composition="Nickel" data-value="1.35">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>½ franc</td>
+                        <td>Common series</td>
+                        <td>KM# 931</td>
+                        <td>2000</td>
+                        <td>Smooth edge</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 1.35</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f72737f9-548d-4fb8-bd38-e1780e58efb1.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/eb2fa09c-9298-493a-be9f-413b919ffcfd.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1923" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.33">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 884</td>
+                        <td>1923</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.33</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ce202b6b-0a05-4e6b-a0d0-4fe54fd48f5c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/44b97d10-38a4-48c5-887a-470de354093e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1963" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1963</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.16</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/73a384ab-7a7b-4403-a859-a59577c58688.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fd9b3853-7769-4de0-b03e-30a0ccf59871.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1963" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1963</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.16</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a8289a28-a60a-49d2-bf70-84b5b16a39c5.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6e33f661-ee52-48de-9f72-21d3ad35f637.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1942" data-grade="AU" data-composition="Aluminium" data-value="0.54">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 914</td>
+                        <td>1942</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.54</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/54e57764-3c21-45ce-8f6b-87a88177270c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0346f645-ac91-41a5-ab2a-34bff6bef402.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1997" data-grade="VF" data-composition="Nickel" data-value="0.22">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>½ franc</td>
+                        <td>Common series</td>
+                        <td>KM# 931</td>
+                        <td>1997</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.22</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/9c14c722-41af-4243-b443-1afd67fc2ac3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b92f82f0-4187-4883-9ea7-d7f9bbddd703.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1967" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.15">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1967</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.15</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ac3fed42-b553-48de-a4e7-1cc2d38875c3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fe92ef09-9225-4160-b27f-b9879d1a04c6.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1990" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.15">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 929</td>
+                        <td>1990</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.15</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d3497d43-bd22-4c65-abe5-a5d300e30325.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fda521eb-ef9e-472d-bee0-eb37ad6db242.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1924" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.74">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 884</td>
+                        <td>1924</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.74</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/657409d9-57bd-4c2f-bf81-aa85723efff2.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6bc45836-4578-4cda-9d81-f8b5f136dfbf.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1970" data-grade="XF" data-composition="Nickel" data-value="0.38">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 925</td>
+                        <td>1970</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.38</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/6391e7da-97cc-4e3c-b3db-8214c90ff88e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/8805c37d-ef81-4c68-b0ca-751a3db4bef7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Nickel" data-value="0.22">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 925</td>
+                        <td>1977</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.22</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d41e27d2-b978-4a6d-95c0-de9a4dc4e6fe.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c49d643d-b2a4-4d52-8b64-43ff440d9c6e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1992" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.17">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>20 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 930</td>
+                        <td>1992</td>
+                        <td>Alignment ↑↓</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.17</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/30ddf7d1-7730-4a56-b6df-a9540c71a54c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/cfd72b9e-bba2-4a54-ae49-9328bd26f95a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1991" data-grade="AU" data-composition="Bi-Metallic: Nickel center, Aluminium-Bronze ring" data-value="20.0">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 964</td>
+                        <td>1991</td>
+                        <td>Smooth edge Proof</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 20.0</td>
+                        <td>Bi-Metallic: Nickel center, Aluminium-Bronze ring</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7d1c1006-7df1-464e-82e5-99cde2dbb53f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/ef711d34-75b9-42c3-bfbd-63ef1c53b091.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Nickel" data-value="0.22">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 925</td>
+                        <td>1977</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.22</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/41f9b531-7512-46d6-8080-d381aa7c434e.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f43302d2-9548-49e2-add8-65eff7ca2fa3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1981" data-grade="VF" data-composition="Nickel" data-value="0.41">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>2 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 942.1</td>
+                        <td>1981</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.41</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/c8a7a528-8d2f-4cf3-bbe3-04b96ca98779.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fb12623c-e5b6-4983-bdbc-62468484f60d.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1965" data-grade="AU" data-composition="Nickel" data-value="0.21">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td>KM# 925</td>
+                        <td>1965</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.21</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d7f84aac-dbeb-47a3-8836-eb2de8bb1b31.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3e4a52cc-8a10-40fc-a2b8-af34c3b424aa.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1932" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.34">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1932</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.34</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/56f2faf8-4079-44ef-8aa8-97d62c28fd11.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6d8cafda-7163-4ed6-a2bd-e4b84d9fb78b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1950" data-grade="VF" data-composition="Aluminium" data-value="0.26">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>2 francs</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1950</td>
+                        <td>B</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.26</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ed38f0a9-e7e0-4985-9b8f-1a6c90718c8d.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e9ab7249-ecb9-49ef-a82c-4c9d49f535b6.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1955" data-grade="AU" data-composition="Copper-Nickel" data-value="1.22">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>100 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 919</td>
+                        <td>1955</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 1.22</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/afb53b20-333b-4635-8fd6-98be0fb5ef9b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e30b0e69-9215-497e-881b-5e532cd3fb4a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1998" data-grade="AU" data-composition="Nickel" data-value="0.5">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>2 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 942.1</td>
+                        <td>1998</td>
+                        <td>Reeded edge</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.5</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a137cbe1-5426-4b69-9c4e-8a87c849355a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/214a608a-f69c-452d-903f-c65466a1545b.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1953" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.56">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 918</td>
+                        <td>1953</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.56</td>
+                        <td>Aluminium-Bronze</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/de725c86-1aa0-4b01-ad0c-d85d6c15e8b6.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/52bdc715-3e0e-479d-87a6-8b25dd3fc935.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1947" data-grade="VF" data-composition="Aluminium" data-value="0.28">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>2 francs</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1947</td>
+                        <td>No mintmark</td>
+                        <td>VF</td>
+                        <td class="value-cell">$ 0.28</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4d25ac73-3de4-4891-926e-57032a47d98c.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/aca5ce00-294e-4673-8607-a4b031928a98.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1949" data-grade="XF" data-composition="Copper-Nickel" data-value="0.53">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 909</td>
+                        <td>1949</td>
+                        <td>No mintmark</td>
+                        <td>XF</td>
+                        <td class="value-cell">$ 0.53</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/726897e9-99f5-490c-964d-41a5d9a0e798.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/21e76464-5b4c-4e6b-8127-60b35226c5b7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1988" data-grade="AU" data-composition="Nickel" data-value="0.81">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>1 franc</td>
+                        <td>30th Anniversary - Fifth Republic</td>
+                        <td>KM# 963</td>
+                        <td>1988</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.81</td>
+                        <td>Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a500c50a-2f73-4c2b-a8a6-8f497eb12846.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f6e23359-6b75-438e-b159-b6d380c55269.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1979" data-grade="AU" data-composition="Copper-Aluminium-Nickel" data-value="0.25">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>10 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 940</td>
+                        <td>1979</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.25</td>
+                        <td>Copper-Aluminium-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a6157730-27a4-4268-b498-a8afd3201d4f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1854f6f6-5ea9-4156-a537-76b7dfdca4d3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1942" data-grade="VF30" data-composition="Aluminium" data-value="0.43">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>50 centimes</td>
+                        <td>Common series</td>
+                        <td>KM# 914</td>
+                        <td>1942</td>
+                        <td>No mintmark</td>
+                        <td>VF30</td>
+                        <td class="value-cell">$ 0.43</td>
+                        <td>Aluminium</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/90506f7e-1090-4304-abcc-ef7ec3db373d.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0eb0393f-8abb-4fe5-a69b-3cf0b5422c37.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="France" data-issuer="France" data-year="1955" data-grade="AU" data-composition="Copper-Nickel" data-value="0.65">
+                        <td>France</td>
+                        <td>France</td>
+                        <td>100 francs</td>
+                        <td>Common series</td>
+                        <td>KM# 919</td>
+                        <td>1955</td>
+                        <td>B</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.65</td>
+                        <td>Copper-Nickel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f5dfad17-88e4-4673-8911-24ed069d74a7.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/5c0300f3-650f-4a76-b4e8-078e1df320f0.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Iraq" data-issuer="Iraq" data-year="1975" data-grade="AU" data-composition="Stainless Steel" data-value="0.83">
+                        <td>Iraq</td>
+                        <td>Iraq</td>
+                        <td>10 fils</td>
+                        <td>Common series</td>
+                        <td>KM# 126a</td>
+                        <td>1975</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.83</td>
+                        <td>Stainless Steel</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/167463b1-a058-421b-8da5-8d76090a169f.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/92f1db69-3c4c-4f00-ad26-b5df8ffc3af3.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                    <tr data-country="Thailand" data-issuer="Thailand" data-year="1979" data-grade="AU" data-composition="Copper-Nickel plated Copper" data-value="0.89">
+                        <td>Thailand</td>
+                        <td>Thailand</td>
+                        <td>5 baht</td>
+                        <td>Common series</td>
+                        <td class="empty-cell">—</td>
+                        <td>1979</td>
+                        <td>No mintmark</td>
+                        <td>AU</td>
+                        <td class="value-cell">$ 0.89</td>
+                        <td>Copper-Nickel plated Copper</td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/54ea1266-8180-4826-a08d-89dbcd7d0652.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                        <td class="image-cell"><img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fb5f279e-d492-46d3-b570-0006bfd2b30a.png" alt="Coin" class="coin-image" loading="lazy"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-container hidden" id="gridContainer">
+            <div class="coin-card" data-country="Türkiye" data-issuer="Turkey" data-year="1991" data-grade="XF" data-composition="Nickel-Brass" data-value="0.47">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/306a2d32-1419-45ad-9d44-3a0fdc635ce7.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9c674031-b763-4cd4-bb5a-8f3fa4b9eb66.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2500 lira</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Türkiye</dd>
+                        <dt>Issuer:</dt><dd>Turkey</dd>
+                        <dt>Year:</dt><dd>1991</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Nickel-Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.47</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Türkiye" data-issuer="Turkey" data-year="1996" data-grade="AU" data-composition="Copper-Zinc-Nickel" data-value="0.67">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/9a525deb-f19b-4cce-828a-a9a4109aaf61.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e986ca1c-4862-44a2-82e6-976c21fa10f9.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">25000 lira</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Türkiye</dd>
+                        <dt>Issuer:</dt><dd>Turkey</dd>
+                        <dt>Year:</dt><dd>1996</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Zinc-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.67</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Türkiye" data-issuer="Turkey" data-year="1998" data-grade="AU" data-composition="Copper-Zinc-Nickel" data-value="0.36">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/fe207419-ec9f-4e62-8939-52df8b216867.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b198bb3f-ad7d-4e2a-8297-89b9c27fc80b.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">25000 lira</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Türkiye</dd>
+                        <dt>Issuer:</dt><dd>Turkey</dd>
+                        <dt>Year:</dt><dd>1998</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Zinc-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.36</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="AU" data-composition="Aluminium" data-value="0.35">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/8f7624a2-d283-49ca-9aac-c787de0b08a3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/a47fac0a-fd5e-4a2a-9639-7642ade42084.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">5 millimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Tunisia</dd>
+                        <dt>Issuer:</dt><dd>Tunisia</dd>
+                        <dt>Year:</dt><dd>1996</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.35</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Tunisia" data-issuer="Tunisia" data-year="1993" data-grade="XF" data-composition="Brass" data-value="0.24">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/41517637-4bf0-4d1c-bb1e-146a973ea1a8.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/ad0aa9f0-9b7e-4c5d-a719-d576aa3e8895.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">20 millimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Tunisia</dd>
+                        <dt>Issuer:</dt><dd>Tunisia</dd>
+                        <dt>Year:</dt><dd>1993</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.24</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="XF" data-composition="Brass" data-value="0.34">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/12fd3b81-013a-43a6-832a-040f82debf0b.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fced2252-4ea8-4638-b38b-e311c5b7c139.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 millimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Tunisia</dd>
+                        <dt>Issuer:</dt><dd>Tunisia</dd>
+                        <dt>Year:</dt><dd>1996</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.34</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Tunisia" data-issuer="Tunisia" data-year="1996" data-grade="XF" data-composition="Brass" data-value="0.18">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d3a724d3-c9bd-4ba2-8903-0ce491280199.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/72c3ece3-9961-4eb8-898c-dba6dc0bf840.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">100 millimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Tunisia</dd>
+                        <dt>Issuer:</dt><dd>Tunisia</dd>
+                        <dt>Year:</dt><dd>1996</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.18</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Israel" data-issuer="Israel" data-year="1991" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.23">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dcfd492d-aa5e-4943-bc57-79ee93d4f59e.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e45275ee-7c1e-41f6-be1d-df0d3d009b56.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 agorot</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Israel</dd>
+                        <dt>Issuer:</dt><dd>Israel</dd>
+                        <dt>Year:</dt><dd>1991</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.23</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Türkiye" data-issuer="Turkey" data-year="1998" data-grade="VF" data-composition="Copper-Zinc-Nickel" data-value="0.28">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2059bfee-c9d9-4c73-82e1-6dc94801a0f5.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/124a31dc-5bbc-44ec-b65e-ad57fb2ed350.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50000 lira</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Türkiye</dd>
+                        <dt>Issuer:</dt><dd>Turkey</dd>
+                        <dt>Year:</dt><dd>1998</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Copper-Zinc-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.28</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1970" data-grade="XF" data-composition="Copper-Nickel" data-value="0.28">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f3f7f210-422b-4439-a079-fdf56d9bc825.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b5cbaa00-39e2-4391-bcd8-fa9326f58530.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1970</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.28</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1960" data-grade="AU" data-composition="Copper-Nickel" data-value="0.32">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4c4e0d1d-eada-4965-99dd-a4be999379d3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/93d858af-cbc5-42f5-bcf7-31152ffdada5.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1960</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.32</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1946" data-grade="XF" data-composition="Copper-Nickel" data-value="0.58">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d9be89f8-793e-46d4-8f4f-b448b3027a3a.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/d8a5f860-2774-4bd0-9820-3b0af8a01e7b.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1946</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.58</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1952" data-grade="XF" data-composition="Copper-Nickel" data-value="0.23">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d20154e3-7314-4e00-9e2b-38ed54c6ca49.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/803d05d2-52b5-4b76-8ae8-d1a2e21118a2.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1952</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.23</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1964" data-grade="XF" data-composition="Copper-Nickel" data-value="0.48">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/12407afc-518f-46d3-8ff7-7754730b3e1b.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7125c430-4b34-4730-8623-b89aa6067d6f.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1964</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.48</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1978" data-grade="AU" data-composition="Copper-Nickel" data-value="0.29">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2351d387-a49e-4942-b2b9-9003d3e41929.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7808345c-6c57-447a-8f50-4e67b0cbc236.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1978</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.29</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1976" data-grade="AU" data-composition="Copper-Nickel" data-value="0.21">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/35aab4ff-c3f0-4bd7-b794-ff4b48ea9f18.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/83efd949-aac1-4ce5-b5b3-35a970644a07.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1976</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.21</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Luxembourg" data-issuer="Luxembourg" data-year="1935" data-grade="AU" data-composition="Nickel" data-value="3.67">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/950d8115-e839-4fa0-91f1-6b1e33193fec.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/2d1a97cb-e4da-4599-9a33-a7110eb862f1.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Luxembourg</dd>
+                        <dt>Issuer:</dt><dd>Luxembourg</dd>
+                        <dt>Year:</dt><dd>1935</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 3.67</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Singapore" data-issuer="Singapore" data-year="1996" data-grade="AU" data-composition="Copper plated zinc" data-value="0.65">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/44fd9170-8194-4d4c-bd86-ba7a94583739.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c1e0a8a0-49c9-455b-b3ea-03dfad7ebbca.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 cent</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Singapore</dd>
+                        <dt>Issuer:</dt><dd>Singapore</dd>
+                        <dt>Year:</dt><dd>1996</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper plated zinc</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.65</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1990" data-grade="AU" data-composition="Bronze" data-value="0.17">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/489f9289-c35d-4da5-8aeb-872ed67978f7.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3a785dc3-c5bf-47bd-828d-89ab9465e136.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1990</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.17</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1993" data-grade="AU" data-composition="Aluminium" data-value="0.16">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dbac102d-e925-4d7d-85c3-4115e122312c.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9d7651aa-9d4e-40f5-9e84-3107be4f9284.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1993</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.16</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1982" data-grade="AU" data-composition="Aluminium" data-value="0.18">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/8630e351-df1f-4a28-97bf-91c1af1870c0.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/284ccb13-d329-4ece-8ba2-90671b5c4b6c.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1982</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.18</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1980" data-grade="AU" data-composition="Aluminium" data-value="0.08">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/cdc8c893-927e-4505-bdd2-6c7b1a71d112.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b08290e2-0035-486c-a294-22ea7d69d86e.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1980</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.08</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1975" data-grade="XF" data-composition="Copper-Nickel" data-value="0.94">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/45a053ae-a3f0-4263-89c5-edd754be3eb6.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3be6dadc-ece0-49d4-8569-c87118c9ccae.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">100 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1975</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.94</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Japan" data-issuer="Japan" data-year="1968" data-grade="AU" data-composition="Bronze" data-value="0.2">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/092c6251-29f9-4e70-8ae5-dab35e0734ce.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3ade1382-6756-454c-beb0-f11ab874daff.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 yen</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Japan</dd>
+                        <dt>Issuer:</dt><dd>Japan</dd>
+                        <dt>Year:</dt><dd>1968</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.2</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Saudi Arabia" data-issuer="Saudi Arabia" data-year="1987" data-grade="AU" data-composition="Copper-Nickel" data-value="0.33">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4b93ce51-6f5b-47bb-9079-655be7c50ba2.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/333dab68-61fb-48ed-81ff-8cd13f1dcbcc.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 halalas</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Saudi Arabia</dd>
+                        <dt>Issuer:</dt><dd>Saudi Arabia</dd>
+                        <dt>Year:</dt><dd>1987</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.33</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Saudi Arabia" data-issuer="Saudi Arabia" data-year="1972" data-grade="VF" data-composition="Copper-Nickel" data-value="0.44">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/5402b3ac-e9c3-41f4-9a26-3f3ee2b30180.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/eb0ee222-d22d-4c68-912f-941de9aa0701.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 halalas</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Saudi Arabia</dd>
+                        <dt>Issuer:</dt><dd>Saudi Arabia</dd>
+                        <dt>Year:</dt><dd>1972</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.44</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="AU" data-composition="Copper-Nickel" data-value="0.96">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a7ca2967-d708-45f9-8a79-25fea66c9888.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/a726d3f7-6b3f-46e2-b84b-6bcb3ad391ff.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2007</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.96</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="1992" data-grade="AU" data-composition="Nickel-Brass" data-value="0.46">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/530e7935-ea1b-4631-8a61-5e66e24bb02f.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c5dfa93c-5130-47f0-b708-d1a72da61f09.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">20 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>1992</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel-Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.46</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="1992" data-grade="XF" data-composition="Copper-Nickel" data-value="0.68">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7b3965eb-6195-42b1-a801-9bda43538001.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c67c0df4-4a31-47fb-aebd-d1315a34f974.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>1992</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.68</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Copper-Nickel" data-value="1.17">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/3269601f-5bdf-4151-a990-c0e7d80c492f.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/29f66fc4-7915-4813-af6d-2a3e432da4b3.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2009</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.17</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Nickel-Brass" data-value="0.33">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/dd7f9873-3f09-4b98-8664-40613fd6d2d3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/4cfe643e-20f4-4595-bb98-a9a4bdb99de1.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">20 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2009</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel-Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.33</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="XF" data-composition="Copper-Nickel" data-value="1.51">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a81ae63e-3a68-4a4e-9efe-6c5fe91b0afa.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/74666796-f5e2-442c-aae4-f66aae56e815.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2008</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.51</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="XF" data-composition="Copper-Nickel" data-value="1.42">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7e1b11c7-dd6b-4711-8295-b1ca4fa9d371.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/da8756d1-808c-44d2-92cb-675adab3bc3a.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2007</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.42</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2009" data-grade="AU" data-composition="Nickel-Brass" data-value="0.33">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/2f304921-691e-4b14-a17c-5a1c9af2fd9e.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/dbe9b5a4-ebac-4c88-b71e-39621d97aea6.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">20 santimu</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2009</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel-Brass</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.33</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="AU" data-composition="Copper-Nickel" data-value="3.46">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/500506d0-1171-4750-bcdc-2953da5f99ed.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/12fcb835-d8ed-4911-8dde-04b028e3ac0d.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2007</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 3.46</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="AU" data-composition="Copper-Nickel" data-value="1.51">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/3cd80905-a7d4-4d15-bec3-c2f72835a481.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/763593cc-3787-4ad4-a1e0-8ef6144f327c.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2008</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.51</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2007" data-grade="XF" data-composition="Copper-Nickel" data-value="1.42">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/aeb2de6c-20c0-42a5-b054-ee41a1728223.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7dced2b2-7e2f-4c9f-a7a8-1e7c8b11dc3a.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2007</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.42</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="2008" data-grade="AU" data-composition="Copper-Nickel" data-value="1.51">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/e60ce13a-40d5-4bf3-92f4-c5575552c650.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1ddf4839-0980-4438-96b8-24f9b098f8b9.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 lats</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>2008</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.51</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Latvia" data-issuer="Latvia" data-year="1999" data-grade="XF" data-composition="Bi-Metallic: Brass center, Copper-Nickel ring" data-value="4.55">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7a2c297e-4145-4e72-9574-bb6faeffe8a9.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/7f4b044f-5144-4634-8bc9-47e9de9fd289.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2 lati</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Latvia</dd>
+                        <dt>Issuer:</dt><dd>Latvia</dd>
+                        <dt>Year:</dt><dd>1999</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Bi-Metallic: Brass center, Copper-Nickel ring</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 4.55</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1939" data-grade="VG" data-composition="Aluminium-Bronze" data-value="0.32">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ca18310f-840a-43d9-b65e-8df595120db7.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/9164d11e-bd06-49d0-b9d5-5582478f326c.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1939</dd>
+                        <dt>Grade:</dt><dd>VG</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.32</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1992" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.62">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4867ad94-9db7-4b8b-a8f7-fc74f22c83fb.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1ee17dc1-3a45-4821-adf3-7d40564df3eb.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">5 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1992</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.62</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1939" data-grade="G" data-composition="Aluminium-Bronze" data-value="0.32">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/5d825fb2-16d5-41e6-a0e8-48452c2df062.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f1d80739-65da-4bea-a4e4-733ba20fdd01.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1939</dd>
+                        <dt>Grade:</dt><dd>G</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.32</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.15">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/1ba6f634-4dc3-436e-94d4-60d6ebfd23f2.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e21126b8-40a5-4978-b7ae-166c2d69545b.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">5 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1977</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.15</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1941" data-grade="XF" data-composition="Aluminium" data-value="0.42">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/51504fb5-8c4f-4a36-9bc2-23c68ead77d8.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6a85612a-e0d3-4bd1-acee-8f3de9c12381.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1941</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.42</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1970" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d2725eba-e9ca-4e4e-9cfb-10581f574cdd.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/999ba75e-3529-4f7e-93a3-a14ac46837a9.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1970</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.16</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1985" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.27">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/34a57c3e-4549-4527-b5e3-7db97c69b247.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/bff21685-833b-40cd-ba61-7c106cf303b4.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1985</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.27</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1987" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.13">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/760c52b9-c345-49e4-8698-2e176a6201b3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/67494c72-dadc-419d-b542-cef564ae5039.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1987</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.13</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1992" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.09">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/813188c1-175c-4896-ab80-7fa14851b138.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e8e24694-a771-487b-b475-8aaebbf0b9ed.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1992</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.09</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1932" data-grade="G" data-composition="Aluminium-Bronze" data-value="0.21">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/e8862d3d-7a65-401e-8a45-fb8e7f046401.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/be7642c6-7aec-447d-b8c0-315543998a12.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1932</dd>
+                        <dt>Grade:</dt><dd>G</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.21</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1979" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.08">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ab3b300a-c7f9-4ac7-aa6b-df639d8b4d3a.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0639feaf-7749-4763-b753-878e7ba0ca85.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1979</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.08</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="2000" data-grade="AU" data-composition="Nickel" data-value="1.35">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f72737f9-548d-4fb8-bd38-e1780e58efb1.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/eb2fa09c-9298-493a-be9f-413b919ffcfd.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">½ franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>2000</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.35</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1923" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.33">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ce202b6b-0a05-4e6b-a0d0-4fe54fd48f5c.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/44b97d10-38a4-48c5-887a-470de354093e.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1923</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.33</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1963" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/73a384ab-7a7b-4403-a859-a59577c58688.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fd9b3853-7769-4de0-b03e-30a0ccf59871.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1963</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.16</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1963" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.16">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a8289a28-a60a-49d2-bf70-84b5b16a39c5.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6e33f661-ee52-48de-9f72-21d3ad35f637.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1963</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.16</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1942" data-grade="AU" data-composition="Aluminium" data-value="0.54">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/54e57764-3c21-45ce-8f6b-87a88177270c.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0346f645-ac91-41a5-ab2a-34bff6bef402.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1942</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.54</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1997" data-grade="VF" data-composition="Nickel" data-value="0.22">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/9c14c722-41af-4243-b443-1afd67fc2ac3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/b92f82f0-4187-4883-9ea7-d7f9bbddd703.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">½ franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1997</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.22</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1967" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.15">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ac3fed42-b553-48de-a4e7-1cc2d38875c3.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fe92ef09-9225-4160-b27f-b9879d1a04c6.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1967</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.15</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1990" data-grade="XF" data-composition="Aluminium-Bronze" data-value="0.15">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d3497d43-bd22-4c65-abe5-a5d300e30325.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fda521eb-ef9e-472d-bee0-eb37ad6db242.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1990</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.15</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1924" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.74">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/657409d9-57bd-4c2f-bf81-aa85723efff2.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6bc45836-4578-4cda-9d81-f8b5f136dfbf.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1924</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.74</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1970" data-grade="XF" data-composition="Nickel" data-value="0.38">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/6391e7da-97cc-4e3c-b3db-8214c90ff88e.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/8805c37d-ef81-4c68-b0ca-751a3db4bef7.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1970</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.38</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Nickel" data-value="0.22">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d41e27d2-b978-4a6d-95c0-de9a4dc4e6fe.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/c49d643d-b2a4-4d52-8b64-43ff440d9c6e.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1977</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.22</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1992" data-grade="AU" data-composition="Aluminium-Bronze" data-value="0.17">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/30ddf7d1-7730-4a56-b6df-a9540c71a54c.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/cfd72b9e-bba2-4a54-ae49-9328bd26f95a.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">20 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1992</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.17</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1991" data-grade="AU" data-composition="Bi-Metallic: Nickel center, Aluminium-Bronze ring" data-value="20.0">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/7d1c1006-7df1-464e-82e5-99cde2dbb53f.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/ef711d34-75b9-42c3-bfbd-63ef1c53b091.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1991</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Bi-Metallic: Nickel center, Aluminium-Bronze ring</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 20.0</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1977" data-grade="AU" data-composition="Nickel" data-value="0.22">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/41f9b531-7512-46d6-8080-d381aa7c434e.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f43302d2-9548-49e2-add8-65eff7ca2fa3.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1977</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.22</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1981" data-grade="VF" data-composition="Nickel" data-value="0.41">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/c8a7a528-8d2f-4cf3-bbe3-04b96ca98779.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fb12623c-e5b6-4983-bdbc-62468484f60d.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1981</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.41</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1965" data-grade="AU" data-composition="Nickel" data-value="0.21">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/d7f84aac-dbeb-47a3-8836-eb2de8bb1b31.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/3e4a52cc-8a10-40fc-a2b8-af34c3b424aa.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1965</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.21</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1932" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.34">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/56f2faf8-4079-44ef-8aa8-97d62c28fd11.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/6d8cafda-7163-4ed6-a2bd-e4b84d9fb78b.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1932</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.34</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1950" data-grade="VF" data-composition="Aluminium" data-value="0.26">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/ed38f0a9-e7e0-4985-9b8f-1a6c90718c8d.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e9ab7249-ecb9-49ef-a82c-4c9d49f535b6.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1950</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.26</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1955" data-grade="AU" data-composition="Copper-Nickel" data-value="1.22">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/afb53b20-333b-4635-8fd6-98be0fb5ef9b.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/e30b0e69-9215-497e-881b-5e532cd3fb4a.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">100 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1955</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 1.22</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1998" data-grade="AU" data-composition="Nickel" data-value="0.5">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a137cbe1-5426-4b69-9c4e-8a87c849355a.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/214a608a-f69c-452d-903f-c65466a1545b.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1998</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.5</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1953" data-grade="VF" data-composition="Aluminium-Bronze" data-value="0.56">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/de725c86-1aa0-4b01-ad0c-d85d6c15e8b6.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/52bdc715-3e0e-479d-87a6-8b25dd3fc935.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1953</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium-Bronze</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.56</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1947" data-grade="VF" data-composition="Aluminium" data-value="0.28">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/4d25ac73-3de4-4891-926e-57032a47d98c.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/aca5ce00-294e-4673-8607-a4b031928a98.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">2 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1947</dd>
+                        <dt>Grade:</dt><dd>VF</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.28</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1949" data-grade="XF" data-composition="Copper-Nickel" data-value="0.53">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/726897e9-99f5-490c-964d-41a5d9a0e798.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/21e76464-5b4c-4e6b-8127-60b35226c5b7.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1949</dd>
+                        <dt>Grade:</dt><dd>XF</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.53</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1988" data-grade="AU" data-composition="Nickel" data-value="0.81">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a500c50a-2f73-4c2b-a8a6-8f497eb12846.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/f6e23359-6b75-438e-b159-b6d380c55269.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">1 franc</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1988</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.81</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1979" data-grade="AU" data-composition="Copper-Aluminium-Nickel" data-value="0.25">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/a6157730-27a4-4268-b498-a8afd3201d4f.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/1854f6f6-5ea9-4156-a537-76b7dfdca4d3.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1979</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Aluminium-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.25</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1942" data-grade="VF30" data-composition="Aluminium" data-value="0.43">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/90506f7e-1090-4304-abcc-ef7ec3db373d.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/0eb0393f-8abb-4fe5-a69b-3cf0b5422c37.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">50 centimes</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1942</dd>
+                        <dt>Grade:</dt><dd>VF30</dd>
+                        <dt>Composition:</dt><dd>Aluminium</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.43</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="France" data-issuer="France" data-year="1955" data-grade="AU" data-composition="Copper-Nickel" data-value="0.65">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/f5dfad17-88e4-4673-8911-24ed069d74a7.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/5c0300f3-650f-4a76-b4e8-078e1df320f0.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">100 francs</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>France</dd>
+                        <dt>Issuer:</dt><dd>France</dd>
+                        <dt>Year:</dt><dd>1955</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.65</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Iraq" data-issuer="Iraq" data-year="1975" data-grade="AU" data-composition="Stainless Steel" data-value="0.83">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/167463b1-a058-421b-8da5-8d76090a169f.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/92f1db69-3c4c-4f00-ad26-b5df8ffc3af3.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">10 fils</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Iraq</dd>
+                        <dt>Issuer:</dt><dd>Iraq</dd>
+                        <dt>Year:</dt><dd>1975</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Stainless Steel</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.83</div>
+                </div>
+            </div>
+            <div class="coin-card" data-country="Thailand" data-issuer="Thailand" data-year="1979" data-grade="AU" data-composition="Copper-Nickel plated Copper" data-value="0.89">
+                <div class="coin-card-images">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/subject_side/1025840847/54ea1266-8180-4826-a08d-89dbcd7d0652.png" alt="Obverse" loading="lazy">
+                    <img src="https://static.coinidentifierai.com/app/prod/recognize/denomination_side/1025840847/fb5f279e-d492-46d3-b570-0006bfd2b30a.png" alt="Reverse" loading="lazy">
+                </div>
+                <div class="coin-card-info">
+                    <div class="coin-card-title">5 baht</div>
+                    <dl class="coin-card-details">
+                        <dt>Country:</dt><dd>Thailand</dd>
+                        <dt>Issuer:</dt><dd>Thailand</dd>
+                        <dt>Year:</dt><dd>1979</dd>
+                        <dt>Grade:</dt><dd>AU</dd>
+                        <dt>Composition:</dt><dd>Copper-Nickel plated Copper</dd>
+                    </dl>
+                    <div class="coin-card-value">$ 0.89</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated from CSV data | Hover over images to zoom</p>
+            <p><a href="https://github.com/benckx/coin-snap-csv-to-html" target="_blank">https://github.com/benckx/coin-snap-csv-to-html</a></p>
+        </div>
+    </div>
+
+    <script>
+        let sortAscending = true;
+
+        function setView(view) {
+            const tableContainer = document.getElementById('tableContainer');
+            const gridContainer = document.getElementById('gridContainer');
+            const listBtn = document.getElementById('listViewBtn');
+            const gridBtn = document.getElementById('gridViewBtn');
+
+            if (view === 'list') {
+                tableContainer.classList.remove('hidden');
+                gridContainer.classList.add('hidden');
+                listBtn.classList.add('active');
+                gridBtn.classList.remove('active');
+            } else {
+                tableContainer.classList.add('hidden');
+                gridContainer.classList.remove('hidden');
+                gridContainer.classList.add('active');
+                listBtn.classList.remove('active');
+                gridBtn.classList.add('active');
+            }
+        }
+
+        function toggleSortOrder() {
+            sortAscending = !sortAscending;
+            document.getElementById('sortOrderBtn').textContent = sortAscending ? '↑' : '↓';
+            sortCoins();
+        }
+
+        function sortCoins() {
+            const sortBy = document.getElementById('sortSelect').value;
+            if (!sortBy) return;
+
+            // Sort table rows
+            const tbody = document.getElementById('tableBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let aVal = a.dataset[sortBy] || '';
+                let bVal = b.dataset[sortBy] || '';
+
+                // Numeric sort for year and value
+                if (sortBy === 'year' || sortBy === 'value') {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                    return sortAscending ? aVal - bVal : bVal - aVal;
+                }
+
+                // String sort for others
+                return sortAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Sort grid cards
+            const gridContainer = document.getElementById('gridContainer');
+            const cards = Array.from(gridContainer.querySelectorAll('.coin-card'));
+
+            cards.sort((a, b) => {
+                let aVal = a.dataset[sortBy] || '';
+                let bVal = b.dataset[sortBy] || '';
+
+                if (sortBy === 'year' || sortBy === 'value') {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                    return sortAscending ? aVal - bVal : bVal - aVal;
+                }
+
+                return sortAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+
+            cards.forEach(card => gridContainer.appendChild(card));
+        }
+    </script>
+</body>
+</html>
