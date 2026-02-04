@@ -138,7 +138,7 @@ def create_html_table(csv_filename, html_filename):
 <body>
     <div class="container">
         <div class="header">
-            <h1>💰 Coin Collection</h1>
+            <h1>Coin Collection</h1>
             <p>Total: {len(data_rows)} coins</p>
         </div>
 

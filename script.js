@@ -1,6 +1,15 @@
 let sortAscending = true;
 
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
 function setView(view) {
+    // On mobile, always force grid view
+    if (isMobile()) {
+        view = 'grid';
+    }
+
     const tableContainer = document.getElementById('tableContainer');
     const gridContainer = document.getElementById('gridContainer');
     const listBtn = document.getElementById('listViewBtn');
@@ -19,6 +28,17 @@ function setView(view) {
         gridBtn.classList.add('active');
     }
 }
+
+// Auto-switch to grid view on mobile when page loads or resizes
+function handleResize() {
+    if (isMobile()) {
+        setView('grid');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', handleResize);
+window.addEventListener('resize', handleResize);
 
 function toggleSortOrder() {
     sortAscending = !sortAscending;

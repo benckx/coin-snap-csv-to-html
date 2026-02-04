@@ -275,20 +275,72 @@ tbody tr:nth-child(even):hover {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+        overflow-x: hidden;
+    }
+
+    .container {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .header {
+        padding: 20px;
+    }
+
     .header h1 {
         font-size: 1.8rem;
     }
 
-    table {
-        font-size: 0.8rem;
+    /* Hide list view on mobile - only grid view allowed */
+    .table-container {
+        display: none !important;
     }
 
-    th, td {
-        padding: 8px 5px;
+    /* Hide the view toggle buttons on mobile */
+    .control-group:first-child {
+        display: none;
     }
 
-    .coin-image {
-        width: 60px;
-        height: 60px;
+    /* Force grid container to be visible */
+    .grid-container {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .grid-container.hidden {
+        display: grid !important;
+    }
+
+    /* Stack coin images vertically on mobile */
+    .coin-card-images {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .coin-card-images img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .coin-card {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .coin-card-info {
+        padding: 12px;
+    }
+
+    .coin-card-title {
+        font-size: 1rem;
+    }
+
+    .controls {
+        padding: 10px 15px;
     }
 }
