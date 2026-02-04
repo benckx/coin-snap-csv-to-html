@@ -271,7 +271,7 @@ def create_html_table(csv_filename, html_filename):
         html_content += """        </div>
 
         <div class="footer">
-            <p>Generated from CSV data | Hover over images to zoom</p>
+            <p>Generated from CSV data</p>
             <p><a href="https://github.com/benckx/coin-snap-csv-to-html" target="_blank">https://github.com/benckx/coin-snap-csv-to-html</a></p>
         </div>
     </div>
