@@ -65,8 +65,13 @@ function sortCoins() {
             return sortAscending ? aVal - bVal : bVal - aVal;
         }
 
-        // String sort for others
-        return sortAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        // String sort for others - case insensitive
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+
+        if (aVal < bVal) return sortAscending ? -1 : 1;
+        if (aVal > bVal) return sortAscending ? 1 : -1;
+        return 0;
     });
 
     rows.forEach(row => tbody.appendChild(row));
@@ -85,7 +90,13 @@ function sortCoins() {
             return sortAscending ? aVal - bVal : bVal - aVal;
         }
 
-        return sortAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        // String sort for others - case insensitive
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+
+        if (aVal < bVal) return sortAscending ? -1 : 1;
+        if (aVal > bVal) return sortAscending ? 1 : -1;
+        return 0;
     });
 
     cards.forEach(card => gridContainer.appendChild(card));
