@@ -102,7 +102,7 @@ def create_html_table(csv_filename, html_filename):
         header = parse_csv_line(lines[0].strip())
 
         # Columns to skip in the output
-        skip_columns = {'Value (MY)', 'Note', 'Custom set'}
+        skip_columns = {'Value (MY)', 'Note', 'Custom set', 'Value, USD (CoinSnap)', 'Precious metal weight', 'Melt value, USD'}
         skip_indices = {i for i, col in enumerate(header) if col in skip_columns}
 
         # Parse data rows
@@ -243,6 +243,9 @@ def create_html_table(csv_filename, html_filename):
             grade = escape_html(get_cell_value(row, 'grade'))
             composition = escape_html(get_cell_value(row, 'composition'))
             value_display = escape_html(get_cell_value(row, 'value'))
+            coinsnap_value = escape_html(get_cell_value(row, 'value, usd (coinsnap)'))
+            precious_metal_weight = escape_html(get_cell_value(row, 'precious metal weight'))
+            melt_value = escape_html(get_cell_value(row, 'melt value, usd'))
             obverse_url = get_cell_value(row, 'obverse')
             reverse_url = get_cell_value(row, 'reverse')
             value_str = get_cell_value(row, 'value')
@@ -261,7 +264,19 @@ def create_html_table(csv_filename, html_filename):
                         <dt>Issuer:</dt><dd>{issuer}</dd>
                         <dt>Year:</dt><dd>{year}</dd>
                         <dt>Grade:</dt><dd>{grade}</dd>
-                        <dt>Composition:</dt><dd>{composition}</dd>
+                        <dt>Composition:</dt><dd>{composition}</dd>'''
+
+            # Add precious metal weight if present
+            if precious_metal_weight:
+                html_content += f'''
+                        <dt>Precious Metal Weight:</dt><dd>{precious_metal_weight}</dd>'''
+
+            # Add melt value if present
+            if melt_value:
+                html_content += f'''
+                        <dt>Melt Value:</dt><dd>{melt_value}</dd>'''
+
+            html_content += f'''
                     </dl>
                     <div class="coin-card-value">{value_display}</div>
                 </div>
