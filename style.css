@@ -318,7 +318,7 @@ tbody tr:nth-child(even):hover {
     /* Stack coin images vertically on mobile */
     .coin-card-images {
         flex-direction: column;
-        width: 100%;
+        width: 90%;
     }
 
     .coin-card-images img {
