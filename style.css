@@ -73,6 +73,10 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.control-group select {
+    min-width: 150px;
+}
+
 .control-group select:hover,
 .control-group button:hover {
     border-color: #667eea;
