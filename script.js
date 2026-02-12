@@ -101,18 +101,22 @@ function updateDenominationFilter() {
         denominationFilter.appendChild(option);
     });
 
-    // Restore previous selection if it still exists
+    // Restore previous selection if it still exists, otherwise reset to "All"
     if (currentValue && Array.from(denominations).includes(currentValue)) {
         denominationFilter.value = currentValue;
+    } else {
+        denominationFilter.value = ''; // Reset to "All" if current selection doesn't exist
     }
 }
 
 function filterCoins() {
     const issuerFilter = document.getElementById('issuerFilter').value.toLowerCase();
-    const denominationFilter = document.getElementById('denominationFilter').value.toLowerCase();
 
     // Update denomination filter options based on selected issuer
     updateDenominationFilter();
+
+    // Get denomination filter value AFTER updating (it may have been reset)
+    const denominationFilter = document.getElementById('denominationFilter').value.toLowerCase();
 
     // Filter table rows
     const tableRows = document.querySelectorAll('#tableBody tr');
@@ -208,4 +212,3 @@ function sortCoins() {
 
     cards.forEach(card => gridContainer.appendChild(card));
 }
-
