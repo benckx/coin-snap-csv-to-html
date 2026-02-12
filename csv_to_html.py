@@ -161,6 +161,18 @@ def create_html_table(csv_filename, html_filename):
                 </select>
                 <button onclick="toggleSortOrder()" id="sortOrderBtn" title="Toggle sort order">↑</button>
             </div>
+            <div class="control-group">
+                <label for="issuerFilter">Issuer:</label>
+                <select id="issuerFilter" onchange="filterCoins()">
+                    <option value="">All</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="denominationFilter">Denomination:</label>
+                <select id="denominationFilter" onchange="filterCoins()">
+                    <option value="">All</option>
+                </select>
+            </div>
         </div>
 
         <div class="table-container" id="tableContainer">
@@ -194,6 +206,7 @@ def create_html_table(csv_filename, html_filename):
             # Get sortable data attributes
             country = escape_html(get_cell_value(row, 'country'))
             issuer = escape_html(get_cell_value(row, 'issuer'))
+            denomination = escape_html(get_cell_value(row, 'denomination'))
             year = escape_html(get_cell_value(row, 'year'))
             grade = escape_html(get_cell_value(row, 'grade'))
             composition = escape_html(get_cell_value(row, 'composition'))
@@ -202,7 +215,7 @@ def create_html_table(csv_filename, html_filename):
             value_num = ''.join(c for c in value_str if c.isdigit() or c == '.')
             value_num = value_num if value_num else '0'
             
-            html_content += f'                    <tr data-country="{country}" data-issuer="{issuer}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">\n'
+            html_content += f'                    <tr data-country="{country}" data-issuer="{issuer}" data-denomination="{denomination}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">\n'
             for idx, cell in enumerate(row):
                 # Skip excluded columns
                 if idx in skip_indices:
@@ -252,7 +265,7 @@ def create_html_table(csv_filename, html_filename):
             value_num = ''.join(c for c in value_str if c.isdigit() or c == '.')
             value_num = value_num if value_num else '0'
 
-            html_content += f'''            <div class="coin-card" data-country="{country}" data-issuer="{issuer}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">
+            html_content += f'''            <div class="coin-card" data-country="{country}" data-issuer="{issuer}" data-denomination="{denomination}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">
                 <div class="coin-card-images">
                     <img src="{escape_html(obverse_url)}" alt="Obverse" loading="lazy">
                     <img src="{escape_html(reverse_url)}" alt="Reverse" loading="lazy">

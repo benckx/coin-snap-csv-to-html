@@ -37,8 +37,119 @@ function handleResize() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', handleResize);
+document.addEventListener('DOMContentLoaded', function() {
+    handleResize();
+    populateFilters();
+});
 window.addEventListener('resize', handleResize);
+
+function populateFilters() {
+    // Get all unique issuers from the data
+    const tableRows = document.querySelectorAll('#tableBody tr');
+    const issuers = new Set();
+
+    tableRows.forEach(row => {
+        const issuer = row.dataset.issuer;
+
+        if (issuer && issuer.trim()) {
+            issuers.add(issuer);
+        }
+    });
+
+    // Populate issuer filter
+    const issuerFilter = document.getElementById('issuerFilter');
+    const sortedIssuers = Array.from(issuers).sort((a, b) => a.localeCompare(b));
+    sortedIssuers.forEach(issuer => {
+        const option = document.createElement('option');
+        option.value = issuer;
+        option.textContent = issuer;
+        issuerFilter.appendChild(option);
+    });
+
+    // Initial population of denomination filter (all denominations)
+    updateDenominationFilter();
+}
+
+function updateDenominationFilter() {
+    const issuerFilter = document.getElementById('issuerFilter').value;
+    const denominationFilter = document.getElementById('denominationFilter');
+    const currentValue = denominationFilter.value; // Remember current selection
+
+    // Clear existing options except "All"
+    denominationFilter.innerHTML = '<option value="">All</option>';
+
+    // Get denominations based on selected issuer
+    const tableRows = document.querySelectorAll('#tableBody tr');
+    const denominations = new Set();
+
+    tableRows.forEach(row => {
+        const issuer = row.dataset.issuer;
+        const denomination = row.dataset.denomination;
+
+        // If an issuer is selected, only include denominations from that issuer
+        if ((!issuerFilter || issuer === issuerFilter) && denomination && denomination.trim()) {
+            denominations.add(denomination);
+        }
+    });
+
+    // Populate denomination filter
+    const sortedDenominations = Array.from(denominations).sort((a, b) => a.localeCompare(b));
+    sortedDenominations.forEach(denomination => {
+        const option = document.createElement('option');
+        option.value = denomination;
+        option.textContent = denomination;
+        denominationFilter.appendChild(option);
+    });
+
+    // Restore previous selection if it still exists, otherwise reset to "All"
+    if (currentValue && Array.from(denominations).includes(currentValue)) {
+        denominationFilter.value = currentValue;
+    } else {
+        denominationFilter.value = ''; // Reset to "All" if current selection doesn't exist
+    }
+}
+
+function filterCoins() {
+    const issuerFilter = document.getElementById('issuerFilter').value.toLowerCase();
+
+    // Update denomination filter options based on selected issuer
+    updateDenominationFilter();
+
+    // Get denomination filter value AFTER updating (it may have been reset)
+    const denominationFilter = document.getElementById('denominationFilter').value.toLowerCase();
+
+    // Filter table rows
+    const tableRows = document.querySelectorAll('#tableBody tr');
+    tableRows.forEach(row => {
+        const issuer = (row.dataset.issuer || '').toLowerCase();
+        const denomination = (row.dataset.denomination || '').toLowerCase();
+
+        const issuerMatch = !issuerFilter || issuer === issuerFilter;
+        const denominationMatch = !denominationFilter || denomination === denominationFilter;
+
+        if (issuerMatch && denominationMatch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Filter grid cards
+    const gridCards = document.querySelectorAll('#gridContainer .coin-card');
+    gridCards.forEach(card => {
+        const issuer = (card.dataset.issuer || '').toLowerCase();
+        const denomination = (card.dataset.denomination || '').toLowerCase();
+
+        const issuerMatch = !issuerFilter || issuer === issuerFilter;
+        const denominationMatch = !denominationFilter || denomination === denominationFilter;
+
+        if (issuerMatch && denominationMatch) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
 
 function toggleSortOrder() {
     sortAscending = !sortAscending;
@@ -101,4 +212,3 @@ function sortCoins() {
 
     cards.forEach(card => gridContainer.appendChild(card));
 }
-
