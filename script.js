@@ -78,9 +78,9 @@ function updateDenominationFilter() {
     // Clear existing options except "All"
     denominationFilter.innerHTML = '<option value="">All</option>';
 
-    // Get denominations based on selected issuer
+    // Get denominations based on selected issuer and count occurrences
     const tableRows = document.querySelectorAll('#tableBody tr');
-    const denominations = new Set();
+    const denominationCounts = new Map();
 
     tableRows.forEach(row => {
         const issuer = row.dataset.issuer;
@@ -88,21 +88,22 @@ function updateDenominationFilter() {
 
         // If an issuer is selected, only include denominations from that issuer
         if ((!issuerFilter || issuer === issuerFilter) && denomination && denomination.trim()) {
-            denominations.add(denomination);
+            denominationCounts.set(denomination, (denominationCounts.get(denomination) || 0) + 1);
         }
     });
 
-    // Populate denomination filter
-    const sortedDenominations = Array.from(denominations).sort((a, b) => a.localeCompare(b));
+    // Populate denomination filter with counts
+    const sortedDenominations = Array.from(denominationCounts.keys()).sort((a, b) => a.localeCompare(b));
     sortedDenominations.forEach(denomination => {
+        const count = denominationCounts.get(denomination);
         const option = document.createElement('option');
         option.value = denomination;
-        option.textContent = denomination;
+        option.textContent = `${denomination} (${count})`;
         denominationFilter.appendChild(option);
     });
 
     // Restore previous selection if it still exists, otherwise reset to "All"
-    if (currentValue && Array.from(denominations).includes(currentValue)) {
+    if (currentValue && denominationCounts.has(currentValue)) {
         denominationFilter.value = currentValue;
     } else {
         denominationFilter.value = ''; // Reset to "All" if current selection doesn't exist
