@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Common conversion logic - called by platform-specific scripts
-# Usage: source convert_common.sh <output_html_path>
+# Fetch the latest CSV export from the standard download location (on Mac or Linux) and call the Python script that convert the CSV to a HTML file
+# (of which the output path is passed as an argument to this script)
+
+# Usage: convert_common.sh <output_html_path>
 
 convert_coinsnap() {
     local OUTPUT_HTML="$1"
@@ -35,4 +37,3 @@ convert_coinsnap() {
         exit 1
     fi
 }
-
