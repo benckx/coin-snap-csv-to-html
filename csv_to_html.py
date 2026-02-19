@@ -130,6 +130,7 @@ def create_html_table(csv_filename, html_filename):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Coin Collection</title>
     <style>
 {css_indented}

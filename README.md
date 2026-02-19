@@ -1,7 +1,7 @@
 # Coin Collection CSV to HTML Converter
 
 Vibed-coded, quick-and-dirty script to convert your [CoinSnap](https://coinidentifierai.com/) coin collection CSV file
-export to a beautiful, interactive HTML page.
+to a beautiful, interactive HTML page.
 
 ## Features
 
@@ -40,7 +40,6 @@ Open the generated HTML file in any web browser to view your coin collection wit
 - Interactive view toggle (list/grid)
 - Column sorting with ascending/descending order
 - Zoomable coin images on hover (list view)
-- Full-size images in grid view
 
 ## Files
 
@@ -53,6 +52,8 @@ Open the generated HTML file in any web browser to view your coin collection wit
 ## Screenshot
 
 After running the script, open `coins.html` in your browser to see your collection!
+
+Example: https://benckx.me/coins
 
 ## License
 
