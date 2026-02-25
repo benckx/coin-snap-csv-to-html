@@ -81,6 +81,42 @@ def is_image_url(text):
     return text_lower.startswith('http') and any(ext in text_lower for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp'])
 
 
+def build_numista_url(issuer, denomination, year, krause_number=""):
+    """Build a Numista search URL for a coin.
+
+    Args:
+        issuer: The coin issuer (e.g., "Papal States")
+        denomination: The coin denomination (e.g., "10 soldi")
+        year: The coin year (e.g., "1867")
+        krause_number: Optional Krause number (e.g., "KM# 38" or "38")
+
+    Returns:
+        A Numista search URL
+    """
+    import urllib.parse
+
+    # Normalize denomination spelling for Numista
+    denomination = denomination.replace("kopeks", "kopecks").replace("kopek", "kopeck")
+
+    # Combine issuer, denomination, and year with spaces
+    search_query = f"{issuer} {denomination} {year}"
+    encoded_query = urllib.parse.quote_plus(search_query)
+
+    # Extract KM number if available
+    km_num = ""
+    if krause_number:
+        km_num = krause_number.replace("KM#", "").replace("KM #", "").strip()
+
+    # Always filter to coins only; add KM number when available
+    no_param = urllib.parse.quote_plus(km_num) if km_num else ""
+    base_url = (
+        f"https://en.numista.com/catalogue/index.php?r={encoded_query}"
+        f"&st=147&cat=y&im1=&im2=&ru=&ie=&ca=3&no={no_param}&v=&cu=&a=&dg=&i=&b=&m=&f=&t=&t2=&w=&mt=&u=&g=&c=&wi=&sw="
+    )
+
+    return base_url
+
+
 def create_html_table(csv_filename, html_filename):
     """
     Read CSV file and create an HTML file with a formatted table.
@@ -186,6 +222,8 @@ def create_html_table(csv_filename, html_filename):
         for idx, col in enumerate(header):
             if idx not in skip_indices:
                 html_content += f"                        <th>{escape_html(col)}</th>\n"
+        # Add Numista column header
+        html_content += "                        <th>Numista</th>\n"
 
         html_content += """                    </tr>
                 </thead>
@@ -212,10 +250,19 @@ def create_html_table(csv_filename, html_filename):
             grade = escape_html(get_cell_value(row, 'grade'))
             composition = escape_html(get_cell_value(row, 'composition'))
             value_str = get_cell_value(row, 'value')
+            krause_number = get_cell_value(row, 'krause')
             # Extract numeric value for sorting
             value_num = ''.join(c for c in value_str if c.isdigit() or c == '.')
             value_num = value_num if value_num else '0'
             
+            # Build Numista URL for table row
+            numista_url = build_numista_url(
+                get_cell_value(row, 'issuer'),
+                get_cell_value(row, 'denomination'),
+                get_cell_value(row, 'year'),
+                krause_number
+            )
+
             html_content += f'                    <tr data-country="{country}" data-issuer="{issuer}" data-denomination="{denomination}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">\n'
             for idx, cell in enumerate(row):
                 # Skip excluded columns
@@ -239,6 +286,8 @@ def create_html_table(csv_filename, html_filename):
                 else:
                     # Empty cell
                     html_content += '                        <td class="empty-cell">—</td>\n'
+            # Add Numista link cell
+            html_content += f'                        <td><a href="{escape_html(numista_url)}" target="_blank" class="numista-link">Numista</a></td>\n'
             html_content += "                    </tr>\n"
 
         html_content += """                </tbody>
@@ -257,14 +306,22 @@ def create_html_table(csv_filename, html_filename):
             grade = escape_html(get_cell_value(row, 'grade'))
             composition = escape_html(get_cell_value(row, 'composition'))
             value_display = escape_html(get_cell_value(row, 'value'))
-            coinsnap_value = escape_html(get_cell_value(row, 'value, usd (coinsnap)'))
             precious_metal_weight = escape_html(get_cell_value(row, 'precious metal weight'))
             melt_value = escape_html(get_cell_value(row, 'melt value, usd'))
             obverse_url = get_cell_value(row, 'obverse')
             reverse_url = get_cell_value(row, 'reverse')
+            krause_number = get_cell_value(row, 'krause')
             value_str = get_cell_value(row, 'value')
             value_num = ''.join(c for c in value_str if c.isdigit() or c == '.')
             value_num = value_num if value_num else '0'
+
+            # Build Numista search URL (using raw values before HTML escaping)
+            numista_url = build_numista_url(
+                get_cell_value(row, 'issuer'),
+                get_cell_value(row, 'denomination'),
+                get_cell_value(row, 'year'),
+                krause_number
+            )
 
             html_content += f'''            <div class="coin-card" data-country="{country}" data-issuer="{issuer}" data-denomination="{denomination}" data-year="{year}" data-grade="{grade}" data-composition="{composition}" data-value="{value_num}">
                 <div class="coin-card-images">
@@ -292,6 +349,9 @@ def create_html_table(csv_filename, html_filename):
 
             html_content += f'''
                     </dl>
+                    <div class="coin-card-links">
+                        <a href="{escape_html(numista_url)}" target="_blank" class="numista-link">Numista</a>
+                    </div>
                     <div class="coin-card-value">{value_display}</div>
                 </div>
             </div>

@@ -165,6 +165,19 @@ body {
     font-weight: 500;
 }
 
+.coin-card-links {
+    margin-top: 10px;
+}
+
+.numista-link {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.numista-link:hover {
+    text-decoration: underline;
+}
+
 .coin-card-value {
     margin-top: 10px;
     padding-top: 10px;
