@@ -108,8 +108,24 @@ def create_html_table(csv_filename, html_filename):
         skip_columns = {'Value (MY)', 'Note', 'Custom set', 'Value, USD (CoinSnap)', 'Precious metal weight', 'Melt value, USD'}
         skip_indices = {i for i, col in enumerate(header) if col in skip_columns}
 
-        # Parse data rows
+        # Column index helpers (needed for deduplication key)
+        col_indices_raw = {col.strip().lower(): i for i, col in enumerate(header)}
+
+        def _get_raw(row, col_name):
+            for key, idx in col_indices_raw.items():
+                if col_name in key:
+                    return row[idx] if idx < len(row) else ""
+            return ""
+
+        def _parse_km(raw):
+            import re as _re
+            digits = _re.sub(r"[^0-9]", "", raw)
+            return digits if digits else None
+
+        # Parse data rows, deduplicating by (issuer, year, denomination, km_number, mintmark, subject)
         data_rows = []
+        _seen_keys = set()
+        total_rows = 0
         for line_num, line in enumerate(lines[1:], start=2):
             line = line.strip()
             if line:  # Skip empty lines
@@ -117,6 +133,18 @@ def create_html_table(csv_filename, html_filename):
                 # Pad row with empty strings if it has fewer columns than header
                 while len(row) < len(header):
                     row.append("")
+                total_rows += 1
+                key = (
+                    _get_raw(row, "issuer"),
+                    _get_raw(row, "year"),
+                    _get_raw(row, "denomination"),
+                    _parse_km(_get_raw(row, "krause")),
+                    _get_raw(row, "mintmark"),
+                    _get_raw(row, "subject"),
+                )
+                if key in _seen_keys:
+                    continue
+                _seen_keys.add(key)
                 data_rows.append(row)
 
         # Load CSS from external file and indent it
@@ -143,7 +171,7 @@ def create_html_table(csv_filename, html_filename):
     <div class="container">
         <div class="header">
             <h1>Coin Collection</h1>
-            <p>Total: {len(data_rows)} coins</p>
+            <p>{len(data_rows)} unique types · {total_rows} total</p>
         </div>
 
         <div class="controls">

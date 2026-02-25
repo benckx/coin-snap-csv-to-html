@@ -87,6 +87,8 @@ def setup_database(conn):
             year        TEXT    NOT NULL,
             denomination TEXT   NOT NULL,
             km_number   INTEGER,
+            mintmark    TEXT,
+            subject     TEXT,
             occurrences INTEGER NOT NULL DEFAULT 1,
             composition TEXT,
             weight      REAL,
@@ -95,7 +97,10 @@ def setup_database(conn):
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS idx_coin_unique
-            ON coin (issuer, year, denomination, COALESCE(km_number, -1));
+            ON coin (issuer, year, denomination,
+                     COALESCE(km_number, -1),
+                     COALESCE(mintmark, ''),
+                     COALESCE(subject, ''));
 
         CREATE TABLE IF NOT EXISTS match (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,6 +156,8 @@ def load_csv(csv_filename):
             "year": get(row, "year"),
             "denomination": get(row, "denomination"),
             "km_number": parse_km_number(get(row, "krause")),
+            "mintmark": get(row, "mintmark") or None,
+            "subject": get(row, "subject") or None,
             "composition": get(row, "composition"),
         })
 
@@ -167,7 +174,7 @@ def upsert_coins(conn, csv_rows):
     """
     # Count occurrences within this CSV
     from collections import Counter
-    key_of = lambda r: (r["issuer"], r["year"], r["denomination"], r["km_number"])
+    key_of = lambda r: (r["issuer"], r["year"], r["denomination"], r["km_number"], r["mintmark"], r["subject"])
     counts = Counter(key_of(r) for r in csv_rows)
 
     # Deduplicate: keep first occurrence for attribute values
@@ -185,17 +192,19 @@ def upsert_coins(conn, csv_rows):
         existing = conn.execute(
             """SELECT id, occurrences FROM coin
                WHERE issuer=? AND year=? AND denomination=?
-                 AND COALESCE(km_number,-1)=COALESCE(?,-1)""",
-            (r["issuer"], r["year"], r["denomination"], km),
+                 AND COALESCE(km_number,-1)=COALESCE(?,-1)
+                 AND COALESCE(mintmark,'')=COALESCE(?,'')
+                 AND COALESCE(subject,'')=COALESCE(?,'')""",
+            (r["issuer"], r["year"], r["denomination"], km, r["mintmark"], r["subject"]),
         ).fetchone()
 
         if existing is None:
             conn.execute(
                 """INSERT INTO coin (issuer, year, denomination, km_number,
-                                    occurrences, composition)
-                   VALUES (?,?,?,?,?,?)""",
+                                    mintmark, subject, occurrences, composition)
+                   VALUES (?,?,?,?,?,?,?,?)""",
                 (r["issuer"], r["year"], r["denomination"], km,
-                 occ, r["composition"]),
+                 r["mintmark"], r["subject"], occ, r["composition"]),
             )
             inserted += 1
         else:
