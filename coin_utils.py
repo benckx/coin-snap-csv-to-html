@@ -37,6 +37,7 @@ def build_numista_url(issuer, denomination, year, krause_number=""):
     """
     # Normalize denomination spelling for Numista
     denomination = denomination.replace("kopeks", "kopecks").replace("kopek", "kopeck")
+    denomination = denomination.replace("rubles", "roubles").replace("ruble", "rouble")
     # Remove parenthetical alternate names (e.g. "2 shillings (florin)" → "2 shillings")
     denomination = re.sub(r"\s*\(.*?\)", "", denomination).strip()
 
