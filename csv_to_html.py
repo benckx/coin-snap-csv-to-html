@@ -81,40 +81,7 @@ def is_image_url(text):
     return text_lower.startswith('http') and any(ext in text_lower for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp'])
 
 
-def build_numista_url(issuer, denomination, year, krause_number=""):
-    """Build a Numista search URL for a coin.
-
-    Args:
-        issuer: The coin issuer (e.g., "Papal States")
-        denomination: The coin denomination (e.g., "10 soldi")
-        year: The coin year (e.g., "1867")
-        krause_number: Optional Krause number (e.g., "KM# 38" or "38")
-
-    Returns:
-        A Numista search URL
-    """
-    import urllib.parse
-
-    # Normalize denomination spelling for Numista
-    denomination = denomination.replace("kopeks", "kopecks").replace("kopek", "kopeck")
-
-    # Combine issuer, denomination, and year with spaces
-    search_query = f"{issuer} {denomination} {year}"
-    encoded_query = urllib.parse.quote_plus(search_query)
-
-    # Extract KM number if available
-    km_num = ""
-    if krause_number:
-        km_num = krause_number.replace("KM#", "").replace("KM #", "").strip()
-
-    # Always filter to coins only; add KM number when available
-    no_param = urllib.parse.quote_plus(km_num) if km_num else ""
-    base_url = (
-        f"https://en.numista.com/catalogue/index.php?r={encoded_query}"
-        f"&st=147&cat=y&im1=&im2=&ru=&ie=&ca=3&no={no_param}&v=&cu=&a=&dg=&i=&b=&m=&f=&t=&t2=&w=&mt=&u=&g=&c=&wi=&sw="
-    )
-
-    return base_url
+from coin_utils import build_numista_url, find_default_csv
 
 
 def create_html_table(csv_filename, html_filename):
@@ -390,12 +357,13 @@ def create_html_table(csv_filename, html_filename):
         return False
 
 
+
 def main():
     """Main function to run the CSV to HTML converter."""
     import sys
 
     # Default filenames
-    csv_file = "snap-export.csv"
+    csv_file = find_default_csv()
     html_file = "coins.html"
 
     # Check if custom filenames were provided as command line arguments
