@@ -105,7 +105,7 @@ def create_html_table(csv_filename, html_filename):
         header = parse_csv_line(lines[0].strip())
 
         # Columns to skip in the output
-        skip_columns = {'Value (MY)', 'Note', 'Custom set', 'Value, USD (CoinSnap)', 'Precious metal weight', 'Melt value, USD'}
+        skip_columns = {'Value (MY)', 'Note', 'Custom set', 'Value, USD (CoinSnap)', 'Value, EUR (CoinSnap)', 'Precious metal weight', 'Melt value, USD', 'Melt value, EUR'}
         skip_indices = {i for i, col in enumerate(header) if col in skip_columns}
 
         # Column index helpers (needed for deduplication key)
@@ -244,12 +244,10 @@ def create_html_table(csv_filename, html_filename):
             year = escape_html(get_cell_value(row, 'year'))
             grade = escape_html(get_cell_value(row, 'grade'))
             composition = escape_html(get_cell_value(row, 'composition'))
-            value_str = get_cell_value(row, 'value')
             krause_number = get_cell_value(row, 'krause')
-            # Extract numeric value for sorting
+            value_str = get_cell_value(row, 'value')
             value_num = ''.join(c for c in value_str if c.isdigit() or c == '.')
             value_num = value_num if value_num else '0'
-            
             # Build Numista URL for table row
             numista_url = build_numista_url(
                 get_cell_value(row, 'issuer'),
