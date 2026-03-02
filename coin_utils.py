@@ -15,12 +15,12 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def find_default_csv():
-    """Return the most recent CoinSnap CSV export from ~/Downloads, or fall back to snap-export.csv."""
+    """Return the most recent CoinSnap CSV export from ~/Downloads, or fall back to coin-snap-example.csv."""
     pattern = os.path.expanduser("~/Downloads/CoinSnap-Exported-all*.csv")
     candidates = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
     if candidates:
         return candidates[0]
-    return os.path.join(_SCRIPT_DIR, "snap-export.csv")
+    return os.path.join(_SCRIPT_DIR, "coin-snap-example.csv")
 
 
 def build_numista_url(issuer, denomination, year, krause_number=""):
@@ -35,6 +35,9 @@ def build_numista_url(issuer, denomination, year, krause_number=""):
     Returns:
         A Numista search URL
     """
+    # Normalize issuer names for Numista
+    issuer = issuer.replace("Western Africa (BCEAO)", "BCEAO")
+
     # Normalize denomination spelling for Numista
     denomination = denomination.replace("kopeks", "kopecks").replace("kopek", "kopeck")
     denomination = denomination.replace("rubles", "roubles").replace("ruble", "rouble")

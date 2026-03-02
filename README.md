@@ -26,7 +26,8 @@ python3 csv_to_html.py
 ```
 
 By default, it outputs `coins.html`. If no input file is specified, the script will first attempt to resolve the most
-recent `CoinSnap-Exported-all*.csv` file from `~/Downloads` (on Mac and Linux), and fall back to `snap-export.csv` if
+recent `CoinSnap-Exported-all*.csv` file from `~/Downloads` (on Mac and Linux), and fall back to `coin-snap-example.csv`
+if
 none is found.
 
 ### Custom Input/Output Files
@@ -48,15 +49,68 @@ Open the generated HTML file in any web browser to view your coin collection wit
 - `csv_to_html.py` - Main converter script
 - `style.css` - Stylesheet (embedded in generated HTML)
 - `script.js` - JavaScript (embedded in generated HTML)
-- `snap-export.csv` - Your CoinSnap export (input)
-- `coins.html` - Generated collection page (output)
+- `coin-snap-example.csv` - CoinSnap export (input of script)
+- `coins.html` - Generated collection page (output of script)
 
-## Screenshot
+## Example
 
 After running the script, open `coins.html` in your browser to see your collection!
 
 Example: https://benckx.me/coins
 
-## License
+# Coin Collection CSV to SQLite Database
+
+A secondary workflow that stores the collection in a SQLite database and enriches it with data
+from [Numista](https://en.numista.com/).
+
+## Files
+
+- `csv_to_sqlite.py` - CSV to SQLite converter + search Numista for matches
+- `fetch_numista_details.py` - Fetches missing coin attributes from Numista
+- `numista_parser.py` - HTML parsers for Numista search results and detail pages
+- `coin_utils.py` - Shared utilities (CSV helpers, Numista URL builder)
+
+## Usage
+
+### Phase 1 – Import CSV into SQLite
+
+Reads the CoinSnap CSV export and populates a `coin` table (deduplicated, with occurrence counts):
+
+```bash
+python3 csv_to_sqlite.py
+```
+
+The script accepts the same optional CSV path argument as `csv_to_html.py`. The database is written to `coins.db`.
+
+### Phase 2 – Fetch Numista matches
+
+For each coin in the database that doesn't yet have enough Numista candidates, searches Numista and stores the results
+in a `numista_match` table. This runs automatically after Phase 1.
+
+### Fetch coin details
+
+For every `numista_match` row whose category is `Standard circulation coins` and that is missing any of `issuer`,
+`period`, `year_from`, `year_to`, `composition`, `weight`, `diameter`, or `thickness`, fetches the Numista detail page
+and fills in the missing values:
+
+```bash
+python3 fetch_numista_details.py
+```
+
+Both scripts accept an optional path to the database file as a first argument (default: `coins.db`).
+
+## Notice on Data Usage & Compliance
+
+This tool is intended strictly for personal, non-commercial use to assist collectors in managing their private records.
+It is not designed for mass data harvesting or commercial exploitation. Users are advised that
+Numista's [Terms of Use](https://en.numista.com/conditions.php) (Section 10) prohibit abnormal use of the platform.
+
+To ensure respect for Numista's infrastructure:
+
+- This script is rate-limited to minimize server load.
+- For extensive data needs or large-scale automation, please use the official Numista API.
+- This project is independent and not affiliated with or endorsed by Numista.
+
+# License
 
 MIT

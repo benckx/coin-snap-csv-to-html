@@ -10,6 +10,7 @@ Phase 2: For each coin without enough matches, fetches the Numista search page
 """
 
 import os
+import random
 import re
 import sqlite3
 import sys
@@ -18,7 +19,7 @@ import urllib.parse
 import urllib.request
 
 from coin_utils import build_numista_url, find_default_csv
-from numista_parser import NumistaParser
+from numista_parser import NumistaSearchResultParser
 
 # ---------------------------------------------------------------------------
 # Config
@@ -89,11 +90,7 @@ def setup_database(conn):
             km_number   INTEGER,
             mintmark    TEXT,
             subject     TEXT,
-            occurrences INTEGER NOT NULL DEFAULT 1,
-            composition TEXT,
-            weight      REAL,
-            diameter    REAL,
-            thickness   REAL
+            occurrences INTEGER NOT NULL DEFAULT 1
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS idx_coin_unique
@@ -102,7 +99,7 @@ def setup_database(conn):
                      COALESCE(mintmark, ''),
                      COALESCE(subject, ''));
 
-        CREATE TABLE IF NOT EXISTS match (
+        CREATE TABLE IF NOT EXISTS numista_match (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             coin_id     INTEGER NOT NULL REFERENCES coin(id),
             numista_id  INTEGER NOT NULL,
@@ -110,6 +107,15 @@ def setup_database(conn):
             category    TEXT,
             km_number   INTEGER,
             title       TEXT,
+            issuer      TEXT,
+            period      TEXT,
+            ruling_authority TEXT,
+            year_from   INTEGER,
+            year_to     INTEGER,
+            composition TEXT,
+            weight      REAL,
+            diameter    REAL,
+            thickness   REAL,
             UNIQUE (coin_id, numista_id)
         );
     """)
@@ -158,7 +164,6 @@ def load_csv(csv_filename):
             "km_number": parse_km_number(get(row, "krause")),
             "mintmark": get(row, "mintmark") or None,
             "subject": get(row, "subject") or None,
-            "composition": get(row, "composition"),
         })
 
     return rows
@@ -201,10 +206,10 @@ def upsert_coins(conn, csv_rows):
         if existing is None:
             conn.execute(
                 """INSERT INTO coin (issuer, year, denomination, km_number,
-                                    mintmark, subject, occurrences, composition)
-                   VALUES (?,?,?,?,?,?,?,?)""",
+                                    mintmark, subject, occurrences)
+                   VALUES (?,?,?,?,?,?,?)""",
                 (r["issuer"], r["year"], r["denomination"], km,
-                 r["mintmark"], r["subject"], occ, r["composition"]),
+                 r["mintmark"], r["subject"], occ),
             )
             inserted += 1
         else:
@@ -252,7 +257,7 @@ def fetch_numista_matches(conn):
                   c.km_number,
                   COUNT(m.id) AS match_count
            FROM coin c
-           LEFT JOIN match m ON m.coin_id = c.id
+           LEFT JOIN numista_match m ON m.coin_id = c.id
            GROUP BY c.id
            HAVING match_count < ?
            ORDER BY c.id""",
@@ -280,7 +285,7 @@ def fetch_numista_matches(conn):
             print("  Stopping Phase 2 – re-run the script to continue.")
             break
 
-        parser = NumistaParser()
+        parser = NumistaSearchResultParser()
         parser.feed(html)
         found = parser.results
 
@@ -289,24 +294,24 @@ def fetch_numista_matches(conn):
             fallback_url = build_numista_url(issuer, denomination, year, "")
             print(f"       No results with KM – retrying without KM …")
             print(f"       URL: {fallback_url}")
-            time.sleep(2)
+            time.sleep(random.uniform(1, 3))
             try:
                 html = fetch_url(fallback_url)
             except RuntimeError as e:
                 print(f"  ❌  {e}")
                 print("  Stopping Phase 2 – re-run the script to continue.")
                 break
-            parser = NumistaParser()
+            parser = NumistaSearchResultParser()
             parser.feed(html)
             found = parser.results
 
         if found:
             print(f"       Found {len(found)} candidate(s): {[r[0] for r in found]}")
-            for nid, category, match_km, title in found:
+            for nid, category, match_km, title, year_from, year_to in found:
                 try:
                     conn.execute(
-                        "INSERT OR IGNORE INTO match (coin_id, numista_id, verified, category, km_number, title) VALUES (?,?,0,?,?,?)",
-                        (coin_id, nid, category, match_km, title),
+                        "INSERT OR IGNORE INTO numista_match (coin_id, numista_id, verified, category, km_number, title, year_from, year_to) VALUES (?,?,0,?,?,?,?,?)",
+                        (coin_id, nid, category, match_km, title, year_from, year_to),
                     )
                 except sqlite3.IntegrityError:
                     pass
@@ -315,9 +320,9 @@ def fetch_numista_matches(conn):
             print("       No candidates found on Numista for this search.")
 
         # Polite delay between requests
-        time.sleep(2)
+        time.sleep(random.uniform(1, 3))
 
-    total_matches = conn.execute("SELECT COUNT(*) FROM match").fetchone()[0]
+    total_matches = conn.execute("SELECT COUNT(*) FROM numista_match").fetchone()[0]
     print(f"\nPhase 2 ✅  Total matches in DB: {total_matches}")
 
 
