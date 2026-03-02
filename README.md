@@ -22,15 +22,17 @@ HTML.
 3. Run the converter:
 
 ```bash
-python csv_to_html.py
+python3 csv_to_html.py
 ```
 
-By default, it reads `snap-export.csv` and outputs `coins.html`.
+By default, it outputs `coins.html`. If no input file is specified, the script will first attempt to resolve the most
+recent `CoinSnap-Exported-all*.csv` file from `~/Downloads` (on Mac and Linux), and fall back to `snap-export.csv` if
+none is found.
 
 ### Custom Input/Output Files
 
 ```bash
-python csv_to_html.py my-coins.csv my-collection.html
+python3 csv_to_html.py my-coins.csv my-collection.html
 ```
 
 ## Output
