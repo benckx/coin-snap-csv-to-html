@@ -13,14 +13,14 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def load_css():
     """Load CSS from external style.css file."""
-    css_path = os.path.join(SCRIPT_DIR, 'style.css')
+    css_path = os.path.join(SCRIPT_DIR, 'html-includes', 'style.css')
     with open(css_path, 'r', encoding='utf-8') as css_file:
         return css_file.read()
 
 
 def load_js():
     """Load JavaScript from external script.js file."""
-    js_path = os.path.join(SCRIPT_DIR, 'script.js')
+    js_path = os.path.join(SCRIPT_DIR, 'html-includes', 'script.js')
     with open(js_path, 'r', encoding='utf-8') as js_file:
         return js_file.read()
 

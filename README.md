@@ -47,8 +47,8 @@ Open the generated HTML file in any web browser to view your coin collection wit
 ## Files
 
 - `csv_to_html.py` - Main converter script
-- `style.css` - Stylesheet (embedded in generated HTML)
-- `script.js` - JavaScript (embedded in generated HTML)
+- `html-includes/style.css` - Stylesheet (embedded in generated HTML)
+- `html-includes/script.js` - JavaScript (embedded in generated HTML)
 - `coin-snap-example.csv` - CoinSnap export (input of script)
 - `coins.html` - Generated collection page (output of script)
 
