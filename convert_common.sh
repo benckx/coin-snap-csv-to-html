@@ -16,8 +16,8 @@ convert_coinsnap() {
     # Ensure output directory exists
     mkdir -p "$(dirname "$OUTPUT_HTML")"
 
-    # Run the Python converter
-    # (by default it resolves the most recent ~/Downloads/CoinSnap-Exported-all*.csv, falling back to snap-export.csv)
+    # Run the Python converter, passing the output HTML path as the sole argument
+    # (CSV is auto-resolved to the most recent ~/Downloads/CoinSnap-Exported-all*.csv, falling back to coin-snap-example.csv)
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     python3 "$SCRIPT_DIR/csv_to_html.py" "$OUTPUT_HTML"
 
