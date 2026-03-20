@@ -208,3 +208,69 @@ class NumistaDetailParser(HTMLParser):
             if m:
                 self.thickness = float(m.group(1))
 
+
+class NumistaPriceParser(HTMLParser):
+    """
+    Collect all per-grade prices from the <table class="collection"> on a
+    Numista coin detail page.
+
+    Each filled cell looks like:
+        <td class="value" data-grade="VG">€ 4.00</td>
+
+    After feeding, access .price_min / .price_max / .price_avg.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._prices = []
+        self._in_table = False
+        self._table_depth = 0
+        self._in_value_td = False
+        self._td_text = ""
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "table" and "collection" in attrs.get("class", "").split():
+            self._in_table = True
+            self._table_depth = 1
+            return
+        if self._in_table:
+            if tag == "table":
+                self._table_depth += 1
+            if tag == "td" and "value" in attrs.get("class", "").split():
+                self._in_value_td = True
+                self._td_text = ""
+
+    def handle_data(self, data):
+        if self._in_value_td:
+            self._td_text += data
+
+    def handle_endtag(self, tag):
+        if tag == "td" and self._in_value_td:
+            self._in_value_td = False
+            text = self._td_text.strip()
+            # Strip currency symbols (€, $, £…) and parse the number
+            m = re.search(r'[\d]+(?:[.,]\d+)?', text.replace(',', '.'))
+            if m:
+                try:
+                    self._prices.append(float(m.group()))
+                except ValueError:
+                    pass
+        if tag == "table" and self._in_table:
+            self._table_depth -= 1
+            if self._table_depth <= 0:
+                self._in_table = False
+
+    @property
+    def price_min(self):
+        return round(min(self._prices), 2) if self._prices else None
+
+    @property
+    def price_max(self):
+        return round(max(self._prices), 2) if self._prices else None
+
+    @property
+    def price_avg(self):
+        return round(sum(self._prices) / len(self._prices), 2) if self._prices else None
+
+

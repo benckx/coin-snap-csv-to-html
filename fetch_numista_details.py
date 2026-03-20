@@ -17,7 +17,7 @@ import sys
 import time
 import urllib.request
 
-from numista_parser import NumistaDetailParser
+from numista_parser import NumistaDetailParser, NumistaPriceParser
 
 # ---------------------------------------------------------------------------
 # Config
@@ -78,7 +78,8 @@ def fetch_details(conn):
                  composition      IS NULL OR
                  weight           IS NULL OR
                  diameter         IS NULL OR
-                 thickness        IS NULL
+                 thickness        IS NULL OR
+                 price_min        IS NULL
              )
            ORDER BY id""",
     ).fetchall()
@@ -103,13 +104,18 @@ def fetch_details(conn):
         parser = NumistaDetailParser()
         parser.feed(html)
 
-        print(f"       issuer={parser.issuer}  period={parser.period}  "
+        price_parser = NumistaPriceParser()
+        price_parser.feed(html)
+
+        print(f"issuer={parser.issuer}  period={parser.period}  "
               f"ruling_authority={parser.ruling_authority}  "
               f"years={parser.year_from}-{parser.year_to}  "
               f"composition={parser.composition}  "
               f"weight={parser.weight}g  "
               f"diameter={parser.diameter}mm  "
-              f"thickness={parser.thickness}mm")
+              f"thickness={parser.thickness}mm  "
+              f"prices min={price_parser.price_min} max={price_parser.price_max} "
+              f"avg={price_parser.price_avg}")
 
         conn.execute(
             """UPDATE numista_match
@@ -121,11 +127,16 @@ def fetch_details(conn):
                    composition       = COALESCE(composition,       ?),
                    weight            = COALESCE(weight,            ?),
                    diameter          = COALESCE(diameter,          ?),
-                   thickness         = COALESCE(thickness,         ?)
+                   thickness         = COALESCE(thickness,         ?),
+                   price_min         = COALESCE(price_min,         ?),
+                   price_max         = COALESCE(price_max,         ?),
+                   price_avg         = COALESCE(price_avg,         ?)
                WHERE id = ?""",
             (parser.issuer, parser.period, parser.ruling_authority,
              parser.year_from, parser.year_to, parser.composition,
-             parser.weight, parser.diameter, parser.thickness, match_id),
+             parser.weight, parser.diameter, parser.thickness,
+             price_parser.price_min, price_parser.price_max, price_parser.price_avg,
+             match_id),
         )
         conn.commit()
 
@@ -135,8 +146,9 @@ def fetch_details(conn):
         """SELECT COUNT(*) FROM numista_match
            WHERE category = 'Standard circulation coins'
              AND (issuer IS NULL OR period IS NULL OR ruling_authority IS NULL OR
-                  year_from IS NULL OR year_to IS NULL OR composition IS NULL
-                  OR weight IS NULL OR diameter IS NULL OR thickness IS NULL)"""
+                  year_from IS NULL OR year_to IS NULL OR composition IS NULL OR
+                  weight IS NULL OR diameter IS NULL OR thickness IS NULL OR
+                  price_min IS NULL)"""
     ).fetchone()[0]
     print(f"\n✅  Done. Rows still incomplete: {total_remaining}")
 

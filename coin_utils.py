@@ -23,7 +23,7 @@ def find_default_csv():
     return os.path.join(_SCRIPT_DIR, "coin-snap-example.csv")
 
 
-def build_numista_url(issuer, denomination, year, krause_number=""):
+def build_numista_url(issuer, denomination, year, krause_number="", subject="", mintmark=""):
     """Build a Numista search URL for a coin.
 
     Args:
@@ -31,6 +31,8 @@ def build_numista_url(issuer, denomination, year, krause_number=""):
         denomination: The coin denomination (e.g., "10 soldi")
         year: The coin year (e.g., "1867")
         krause_number: Optional Krause number (e.g., "KM# 38" or "38")
+        subject: Optional subject (appended to search when not "Common series")
+        mintmark: Optional mintmark (appended to search when not "No mintmark")
 
     Returns:
         A Numista search URL
@@ -56,6 +58,10 @@ def build_numista_url(issuer, denomination, year, krause_number=""):
         search_parts = [issuer, year]
     else:
         search_parts = [issuer, denomination, year]
+        if subject and subject.strip().lower() != "common series":
+            search_parts.append(subject.strip())
+        if mintmark and mintmark.strip().lower() != "no mintmark":
+            search_parts.append(mintmark.strip())
 
     encoded_query = urllib.parse.quote_plus(" ".join(search_parts))
     no_param = urllib.parse.quote_plus(km_num)

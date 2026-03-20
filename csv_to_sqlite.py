@@ -90,7 +90,9 @@ def setup_database(conn):
             km_number   INTEGER,
             mintmark    TEXT,
             subject     TEXT,
-            occurrences INTEGER NOT NULL DEFAULT 1
+            occurrences INTEGER NOT NULL DEFAULT 1,
+            obverse_photo_url TEXT,
+            reverse_photo_url TEXT
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS idx_coin_unique
@@ -116,6 +118,9 @@ def setup_database(conn):
             weight      REAL,
             diameter    REAL,
             thickness   REAL,
+            price_min   REAL,
+            price_max   REAL,
+            price_avg   REAL,
             UNIQUE (coin_id, numista_id)
         );
     """)
@@ -164,6 +169,8 @@ def load_csv(csv_filename):
             "km_number": parse_km_number(get(row, "krause")),
             "mintmark": get(row, "mintmark") or None,
             "subject": get(row, "subject") or None,
+            "obverse_photo_url": get(row, "obverse photo") or None,
+            "reverse_photo_url": get(row, "reverse photo") or None,
         })
 
     return rows
@@ -206,10 +213,12 @@ def upsert_coins(conn, csv_rows):
         if existing is None:
             conn.execute(
                 """INSERT INTO coin (issuer, year, denomination, km_number,
-                                    mintmark, subject, occurrences)
-                   VALUES (?,?,?,?,?,?,?)""",
+                                    mintmark, subject, occurrences,
+                                    obverse_photo_url, reverse_photo_url)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
                 (r["issuer"], r["year"], r["denomination"], km,
-                 r["mintmark"], r["subject"], occ),
+                 r["mintmark"], r["subject"], occ,
+                 r["obverse_photo_url"], r["reverse_photo_url"]),
             )
             inserted += 1
         else:
@@ -220,6 +229,12 @@ def upsert_coins(conn, csv_rows):
                     (occ, coin_id),
                 )
                 updated += 1
+            # Always refresh photo URLs
+            conn.execute(
+                """UPDATE coin SET obverse_photo_url=?, reverse_photo_url=?
+                   WHERE id=?""",
+                (r["obverse_photo_url"], r["reverse_photo_url"], coin_id),
+            )
 
     conn.commit()
     print(f"Phase 1 ✅  inserted={inserted}  updated={updated}  "
@@ -254,7 +269,7 @@ def fetch_numista_matches(conn):
     """
     coins = conn.execute(
         """SELECT c.id, c.issuer, c.year, c.denomination,
-                  c.km_number,
+                  c.km_number, c.subject, c.mintmark,
                   COUNT(m.id) AS match_count
            FROM coin c
            LEFT JOIN numista_match m ON m.coin_id = c.id
@@ -271,9 +286,9 @@ def fetch_numista_matches(conn):
     print(f"Phase 2 🔍  {len(coins)} coin(s) need Numista lookups …\n")
 
     for row in coins:
-        coin_id, issuer, year, denomination, km_number, match_count = row
+        coin_id, issuer, year, denomination, km_number, subject, mintmark, match_count = row
         km_str = f"KM# {km_number}" if km_number else ""
-        url = build_numista_url(issuer, denomination, year, km_str)
+        url = build_numista_url(issuer, denomination, year, km_str, subject or "", mintmark or "")
 
         print(f"  [{coin_id}] {issuer} – {denomination} ({year}) {km_str}")
         print(f"       URL: {url}")
@@ -291,7 +306,7 @@ def fetch_numista_matches(conn):
 
         # If KM was specified but returned nothing, retry without KM
         if not found and km_str:
-            fallback_url = build_numista_url(issuer, denomination, year, "")
+            fallback_url = build_numista_url(issuer, denomination, year, "", subject or "", mintmark or "")
             print(f"       No results with KM – retrying without KM …")
             print(f"       URL: {fallback_url}")
             time.sleep(random.uniform(1, 3))
